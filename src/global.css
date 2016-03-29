@@ -1,5 +1,7 @@
-/* Global styles */
+html {
+  box-sizing: border-box;
+}
 
-body {
-  background-color: white;
+*, *:before, *:after {
+  box-sizing: inherit;
 }

@@ -1,0 +1,9 @@
+.sheetTable {
+  border-collapse: collapse;
+
+  & td {
+    border: 1px solid #CCC;
+    padding: 2px;
+    width: 50px;
+  }
+}

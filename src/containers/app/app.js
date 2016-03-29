@@ -1,9 +1,19 @@
-import styles from './app.css';
+import Immutable from 'immutable';
+import {connect} from 'react-redux';
+import React, {PropTypes} from 'react';
 
-import React from 'react';
+import SheetTable from '../../components/sheetTable/sheetTable';
 
-const App = () => (
-  <h1 className={styles.helloWorld}>Hello world</h1>
+const App = ({sheetData}) => (
+  <SheetTable sheetData={sheetData} />
 );
 
-export default App;
+App.propTypes = {
+  sheetData: PropTypes.instanceOf(Immutable.List).isRequired,
+};
+
+const mapStateToProps = state => ({
+  sheetData: state.get('sheet'),
+});
+
+export default connect(mapStateToProps)(App);

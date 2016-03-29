@@ -1,4 +1,8 @@
 import {combineImmutableReducers} from '../utils/immutableUtils';
 
+import sheetReducer from './sheetReducer';
+
 // This is the top level reducer for the app, given to the store in main.js
-export default combineImmutableReducers({});
+export default combineImmutableReducers({
+  sheet: sheetReducer,
+});
