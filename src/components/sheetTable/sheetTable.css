@@ -1,9 +1,22 @@
 .sheetTable {
   border-collapse: collapse;
 
-  & td {
+  & th, & td {
     border: 1px solid #CCC;
+    font-weight: normal;
     padding: 2px;
+  }
+
+  & th {
+    background-color: #EEE;
+
+    &:first-child {
+      width: 25px;
+    }
+  }
+
+  & td {
+    text-align: right;
     width: 50px;
   }
 }

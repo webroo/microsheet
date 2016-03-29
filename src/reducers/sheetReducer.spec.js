@@ -3,7 +3,7 @@ import {expect} from 'chai';
 
 import sheetReducer from './sheetReducer';
 
-describe.only('sheetReducer', () => {
+describe('sheetReducer', () => {
   it('should return the initial state', () => {
     const newState = sheetReducer(undefined, {});
     expect(newState).to.equal(Immutable.fromJS([
