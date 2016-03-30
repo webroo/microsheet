@@ -4,7 +4,7 @@
   & th, & td {
     border: 1px solid #CCC;
     font-weight: normal;
-    padding: 2px;
+    padding: 0;
   }
 
   & th {
@@ -17,6 +17,18 @@
 
   & td {
     text-align: right;
-    width: 50px;
+    width: 60px;
+
+    & span {
+      display: inline-block;
+      padding: 2px;
+      width: 100%;
+    }
+
+    & input {
+      border: 0;
+      padding: 2px;
+      width: 100%;
+    }
   }
 }

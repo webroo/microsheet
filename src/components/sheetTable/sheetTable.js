@@ -3,7 +3,16 @@ import styles from './sheetTable.css';
 import Immutable from 'immutable';
 import React, {PropTypes} from 'react';
 
-const SheetTable = ({sheetData, rowHeaderData, colHeaderData}) => {
+import SheetCell from './sheetCell';
+
+const SheetTable = ({
+  sheetData,
+  rowHeaderData,
+  colHeaderData,
+  editingCoor,
+  onEditingCoorChange,
+  onCellValueChange,
+}) => {
   return (
     <table className={styles.sheetTable}>
       <tbody>
@@ -21,7 +30,15 @@ const SheetTable = ({sheetData, rowHeaderData, colHeaderData}) => {
               <th scope="row">{colHeaderData.get(rowIndex)}</th>
               {
                 row.map((cell, cellIndex) => (
-                  <td key={cellIndex}>{cell}</td>
+                  <SheetCell
+                    key={cellIndex}
+                    value={cell}
+                    coor={[rowIndex, cellIndex]}
+                    isEditing={rowIndex === editingCoor.get(0) && cellIndex === editingCoor.get(1)}
+                    onEditFocus={onEditingCoorChange}
+                    onLoseFocus={() => onEditingCoorChange([null, null])}
+                    onValueChange={onCellValueChange}
+                  />
                 ))
               }
             </tr>
@@ -36,6 +53,9 @@ SheetTable.propTypes = {
   sheetData: PropTypes.instanceOf(Immutable.List).isRequired,
   rowHeaderData: PropTypes.instanceOf(Immutable.List).isRequired,
   colHeaderData: PropTypes.instanceOf(Immutable.List).isRequired,
+  editingCoor: PropTypes.instanceOf(Immutable.List).isRequired,
+  onEditingCoorChange: PropTypes.func.isRequired,
+  onCellValueChange: PropTypes.func.isRequired,
 };
 
 export default SheetTable;
