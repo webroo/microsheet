@@ -32,7 +32,7 @@ const SheetTable = ({
                 row.map((cell, cellIndex) => (
                   <SheetCell
                     key={cellIndex}
-                    value={cell}
+                    cellData={cell}
                     coor={[rowIndex, cellIndex]}
                     isEditing={rowIndex === editingCoor.get(0) && cellIndex === editingCoor.get(1)}
                     onEditFocus={onEditingCoorChange}

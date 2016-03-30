@@ -1,8 +1,8 @@
+import Immutable from 'immutable';
 import React, {PropTypes} from 'react';
 
-// prefer-stateless-function
 const SheetCell = ({
-  value,
+  cellData,
   coor,
   isEditing,
   onEditFocus,
@@ -16,7 +16,7 @@ const SheetCell = ({
         ?
         <input
           type="text"
-          defaultValue={value}
+          defaultValue={cellData.get('raw')}
           onBlur={event => {
             onValueChange(coor, event.target.value);
             onLoseFocus(coor);
@@ -37,14 +37,14 @@ const SheetCell = ({
           }}
         />
         :
-        <span onDoubleClick={() => onEditFocus(coor)}>{value}</span>
+        <span onDoubleClick={() => onEditFocus(coor)}>{cellData.get('val')}</span>
       }
     </td>
   );
 };
 
 SheetCell.propTypes = {
-  value: PropTypes.string.isRequired,
+  cellData: PropTypes.instanceOf(Immutable.Map).isRequired,
   coor: PropTypes.array.isRequired,
   isEditing: PropTypes.bool.isRequired,
   onEditFocus: PropTypes.func.isRequired,
