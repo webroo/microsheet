@@ -1,6 +1,6 @@
 import Immutable from 'immutable';
 
-import {coerceStringToNumber} from '../utils/sheetUtils';
+import {computeSheet, coerceStringToNumber} from '../utils/sheetUtils';
 
 const initialState = Immutable.fromJS([
   [{raw: 1, val: 1}, {raw: 2, val: 2}, {raw: 3, val: 3}],
@@ -19,9 +19,7 @@ export const updateCellValue = (coor, value) => ({
 export default function sheetReducer(state = initialState, action) {
   switch (action.type) {
     case UPDATE_CELL_VALUE:
-      return state
-        .setIn([...action.coor, 'raw'], coerceStringToNumber(action.value))
-        .setIn([...action.coor, 'val'], coerceStringToNumber(action.value));
+      return computeSheet(state.setIn([...action.coor, 'raw'], coerceStringToNumber(action.value)));
     default:
       return state;
   }
