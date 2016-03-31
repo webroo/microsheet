@@ -13,8 +13,8 @@ export const capitalizeCellAddresses = expr => (
 
 export const sanitizeExpression = expr => (
   // The first regex removes anything that isn't a valid operator symbol or A-Z character
-  // The second removes any sequence of A-Z chars greater than 1 (a cell address can only have one letter)
-  expr.replace(/[^+\-*/().:\^\dA-Z]/g, '').replace(/[A-Z]{2,}/g, '')
+  // The second removes any sequence of A-Z chars of 2 or greater (a cell address can only have one letter)
+  expr.replace(/[^+\-*/().:\dA-Z]/g, '').replace(/[A-Z]{2,}/g, '')
 );
 
 export const computeSheet = (sheet) => {
@@ -41,7 +41,7 @@ export const computeSheet = (sheet) => {
         const cellVal = cellMap[cellKey];
         // Only eval cell contents that start with '=', which denotes a formula expression
         if (typeof cellVal === 'string' && cellVal.charAt(0) === '=') {
-          // Remember to remove the starting '=' symbol before evaluating the expression
+          // Remove the starting '=' symbol and sanitize the expression before evaluating it
           return evalFunc(cellMap, sanitizeExpression(cellVal.substring(1)));
         }
         return cellVal;
@@ -59,7 +59,7 @@ export const computeSheet = (sheet) => {
         // Circular references in forumlas will throw a stack overflow error from the getters
         computedVal = '#ERROR!';
       }
-      return cell.set('val', computedVal);
+      return cell.set('val', computedVal.toString());
     });
   });
 
