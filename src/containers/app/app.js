@@ -2,8 +2,7 @@ import Immutable from 'immutable';
 import {connect} from 'react-redux';
 import React, {PropTypes} from 'react';
 
-import {changeEditingCoor} from '../../reducers/editorReducer';
-import {updateCellValue} from '../../reducers/sheetReducer';
+import {updateCellValue, changeEditingCoor} from '../../reducers/sheetReducer';
 import {rowHeaderSelector, colHeaderSelector} from '../../selectors/sheetSelector';
 import SheetTable from '../../components/sheetTable/sheetTable';
 
@@ -37,10 +36,10 @@ App.propTypes = {
 };
 
 const mapStateToProps = state => ({
-  sheetData: state.get('sheet'),
+  sheetData: state.getIn(['sheet', 'data']),
   rowHeaderData: rowHeaderSelector(state.get('sheet')),
   colHeaderData: colHeaderSelector(state.get('sheet')),
-  editingCoor: state.getIn(['editor', 'editingCoor']),
+  editingCoor: state.getIn(['sheet', 'editingCoor']),
 });
 
 const mapDispatchToProps = {
