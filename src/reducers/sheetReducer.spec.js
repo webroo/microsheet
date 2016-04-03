@@ -40,6 +40,18 @@ describe('changeSelectedCoor action', () => {
   });
 });
 
+describe('moveSelectedCoor action', () => {
+  const {MOVE_SELECTED_COOR, moveSelectedCoor} = sheetReducerActions;
+
+  it('should return an object with a direction', () => {
+    const action = moveSelectedCoor('up');
+    expect(action).to.eql({
+      type: MOVE_SELECTED_COOR,
+      direction: 'up',
+    });
+  });
+});
+
 describe('sheetReducer', () => {
   it('should return the initial state', () => {
     const initialState = sheetReducer(undefined, {});
@@ -104,5 +116,57 @@ describe('sheetReducer changeSelectedCoor action', () => {
   it('should update the editingCoor state with the new coordinate', () => {
     const state = sheetReducer(undefined, changeSelectedCoor([1, 1]));
     expect(state.get('selectedCoor')).to.equal(new Immutable.List([1, 1]));
+  });
+});
+
+describe('sheetReducer moveSelectedCoor action', () => {
+  const {changeSelectedCoor, moveSelectedCoor} = sheetReducerActions;
+
+  it('should move the selected coor up', () => {
+    let state = sheetReducer(undefined, changeSelectedCoor([1, 1]));
+    state = sheetReducer(state, moveSelectedCoor('up'));
+    expect(state.get('selectedCoor')).to.equal(new Immutable.List([0, 1]));
+  });
+
+  it('should move the selected coor down', () => {
+    let state = sheetReducer(undefined, changeSelectedCoor([1, 1]));
+    state = sheetReducer(state, moveSelectedCoor('down'));
+    expect(state.get('selectedCoor')).to.equal(new Immutable.List([2, 1]));
+  });
+
+  it('should move the selected coor left', () => {
+    let state = sheetReducer(undefined, changeSelectedCoor([1, 1]));
+    state = sheetReducer(state, moveSelectedCoor('left'));
+    expect(state.get('selectedCoor')).to.equal(new Immutable.List([1, 0]));
+  });
+
+  it('should move the selected coor right', () => {
+    let state = sheetReducer(undefined, changeSelectedCoor([1, 1]));
+    state = sheetReducer(state, moveSelectedCoor('right'));
+    expect(state.get('selectedCoor')).to.equal(new Immutable.List([1, 2]));
+  });
+
+  it('should not move the selected coor up beyond the boundary', () => {
+    let state = sheetReducer(undefined, changeSelectedCoor([0, 0]));
+    state = sheetReducer(state, moveSelectedCoor('up'));
+    expect(state.get('selectedCoor')).to.equal(new Immutable.List([0, 0]));
+  });
+
+  it('should not move the selected coor down beyond the boundary', () => {
+    let state = sheetReducer(undefined, changeSelectedCoor([2, 2]));
+    state = sheetReducer(state, moveSelectedCoor('down'));
+    expect(state.get('selectedCoor')).to.equal(new Immutable.List([2, 2]));
+  });
+
+  it('should not move the selected coor left beyond the boundary', () => {
+    let state = sheetReducer(undefined, changeSelectedCoor([0, 0]));
+    state = sheetReducer(state, moveSelectedCoor('left'));
+    expect(state.get('selectedCoor')).to.equal(new Immutable.List([0, 0]));
+  });
+
+  it('should move the selected coor right beyond the boundary', () => {
+    let state = sheetReducer(undefined, changeSelectedCoor([2, 2]));
+    state = sheetReducer(state, moveSelectedCoor('right'));
+    expect(state.get('selectedCoor')).to.equal(new Immutable.List([2, 2]));
   });
 });

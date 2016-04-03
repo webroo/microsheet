@@ -13,10 +13,25 @@ const SheetTable = ({
   editingCoor,
   onEditingCoorChange,
   onSelectCoorChange,
+  onMoveSelectedCoor,
   onCellValueChange,
 }) => {
   return (
-    <table className={styles.sheetTable}>
+    <table
+      tabIndex="0"
+      className={styles.sheetTable}
+      onKeyDown={event => {
+        const directions = {ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right'};
+        if (Object.keys(directions).includes(event.key)) {
+          onMoveSelectedCoor(directions[event.key]);
+        }
+      }}
+      ref={table => {
+        if (table && (editingCoor.get(0) === null && editingCoor.get(1) === null)) {
+          table.focus();
+        }
+      }}
+    >
       <tbody>
         <tr>
           <th></th>
@@ -61,6 +76,7 @@ SheetTable.propTypes = {
   editingCoor: PropTypes.instanceOf(Immutable.List).isRequired,
   onEditingCoorChange: PropTypes.func.isRequired,
   onSelectCoorChange: PropTypes.func.isRequired,
+  onMoveSelectedCoor: PropTypes.func.isRequired,
   onCellValueChange: PropTypes.func.isRequired,
 };
 

@@ -32,11 +32,12 @@ const SheetCell = ({
             onValueChange(coor, event.target.value);
             onLoseFocus(coor);
           }}
-          onKeyUp={event => {
-            if (event.keyCode === 13) {
+          onKeyDown={event => {
+            event.stopPropagation();
+            if (event.key === 'Enter') {
               onValueChange(coor, event.target.value);
               onLoseFocus(coor);
-            } else if (event.keyCode === 27) {
+            } else if (event.key === 'Escape') {
               onLoseFocus(coor);
             }
           }}
@@ -49,7 +50,7 @@ const SheetCell = ({
         />
         :
         <span
-          onClick={() => onSelectFocus(coor)}
+          onMouseDown={() => onSelectFocus(coor)}
           onDoubleClick={() => onEditFocus(coor)}
         >
           {

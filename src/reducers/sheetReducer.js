@@ -18,6 +18,7 @@ const initialState = Immutable.fromJS({
 export const UPDATE_CELL_VALUE = 'UPDATE_CELL_VALUE';
 export const CHANGE_EDITING_COOR = 'CHANGE_EDITING_COOR';
 export const CHANGE_SELECTED_COOR = 'CHANGE_SELECTED_COOR';
+export const MOVE_SELECTED_COOR = 'MOVE_SELECTED_COOR';
 
 export const updateCellValue = (coor, value) => ({
   type: UPDATE_CELL_VALUE,
@@ -33,6 +34,11 @@ export const changeEditingCoor = coor => ({
 export const changeSelectedCoor = coor => ({
   type: CHANGE_SELECTED_COOR,
   coor,
+});
+
+export const moveSelectedCoor = direction => ({
+  type: MOVE_SELECTED_COOR,
+  direction,
 });
 
 function reduceNewCellValue(state, cellCoor, cellValue) {
@@ -56,6 +62,28 @@ function reduceNewCellValue(state, cellCoor, cellValue) {
   return newState;
 }
 
+function reduceMoveSelectedCoor(state, direction) {
+  if (state.getIn(['selectedCoor', 0]) === null || state.getIn(['selectedCoor', 1]) === null) {
+    return state;
+  }
+
+  const maxCols = state.getIn(['data', 0]).size - 1;
+  const maxRows = state.get('data').size - 1;
+
+  switch (direction) {
+    case 'up':
+      return state.setIn(['selectedCoor', 0], Math.max(0, state.getIn(['selectedCoor', 0]) - 1));
+    case 'down':
+      return state.setIn(['selectedCoor', 0], Math.min(maxCols, state.getIn(['selectedCoor', 0]) + 1));
+    case 'left':
+      return state.setIn(['selectedCoor', 1], Math.max(0, state.getIn(['selectedCoor', 1]) - 1));
+    case 'right':
+      return state.setIn(['selectedCoor', 1], Math.min(maxRows, state.getIn(['selectedCoor', 1]) + 1));
+    default:
+      return state;
+  }
+}
+
 export default function sheetReducer(state = initialState, action) {
   switch (action.type) {
     case UPDATE_CELL_VALUE:
@@ -64,6 +92,8 @@ export default function sheetReducer(state = initialState, action) {
       return state.set('editingCoor', new Immutable.List(action.coor));
     case CHANGE_SELECTED_COOR:
       return state.set('selectedCoor', new Immutable.List(action.coor));
+    case MOVE_SELECTED_COOR:
+      return reduceMoveSelectedCoor(state, action.direction);
     default:
       return state;
   }
