@@ -24,6 +24,8 @@ const SheetTable = ({
         const directions = {ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right'};
         if (Object.keys(directions).includes(event.key)) {
           onMoveSelectedCoor(directions[event.key]);
+        } else if (event.key === 'Enter') {
+          onEditingCoorChange(selectedCoor.toJS());
         }
       }}
       ref={table => {
@@ -55,7 +57,14 @@ const SheetTable = ({
                     isEditing={rowIndex === editingCoor.get(0) && cellIndex === editingCoor.get(1)}
                     onEditFocus={onEditingCoorChange}
                     onSelectFocus={onSelectCoorChange}
-                    onLoseFocus={() => onEditingCoorChange([null, null])}
+                    onLoseFocus={type => {
+                      onEditingCoorChange([null, null]);
+                      if (type === 'enter') {
+                        onMoveSelectedCoor('down');
+                      } else if (type === 'tab') {
+                        onMoveSelectedCoor('right');
+                      }
+                    }}
                     onValueChange={onCellValueChange}
                   />
                 ))

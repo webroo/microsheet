@@ -30,15 +30,19 @@ const SheetCell = ({
           defaultValue={cellData.get('raw')}
           onBlur={event => {
             onValueChange(coor, event.target.value);
-            onLoseFocus(coor);
+            onLoseFocus('blur', coor);
           }}
           onKeyDown={event => {
             event.stopPropagation();
             if (event.key === 'Enter') {
               onValueChange(coor, event.target.value);
-              onLoseFocus(coor);
+              onLoseFocus('enter', coor);
             } else if (event.key === 'Escape') {
-              onLoseFocus(coor);
+              onLoseFocus('escape', coor);
+            } else if (event.key === 'Tab') {
+              event.preventDefault();
+              onValueChange(coor, event.target.value);
+              onLoseFocus('tab', coor);
             }
           }}
           ref={input => {

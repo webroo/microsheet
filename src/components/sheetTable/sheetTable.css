@@ -1,5 +1,6 @@
 .sheetTable {
   border-collapse: collapse;
+  outline: none;
 
   & th, & td {
     border: 1px solid #CCC;
