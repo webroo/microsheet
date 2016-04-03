@@ -2,7 +2,7 @@ export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 export const isNumber = n => !isNaN(parseFloat(n)) && isFinite(n);
 
-export const coerceStringToNumber = n => (isNumber(n) ? parseFloat(n) : n);
+export const coerceValueToNumber = n => (isNumber(n) ? parseFloat(n) : n);
 
 export const getCellAddrFromCoor = coor => `${ALPHABET[coor[1]]}${coor[0] + 1}`;
 
@@ -12,7 +12,7 @@ export const capitalizeCellAddresses = expr => (
 );
 
 export const sanitizeExpression = expr => (
-  // The first regex removes anything that isn't a valid operator symbol or A-Z character
+  // The first regex removes anything that isn't a valid operator symbol or uppercase A-Z character
   // The second removes any sequence of A-Z chars of 2 or greater (a cell address can only have one letter)
   expr.replace(/[^+\-*/().:\dA-Z]/g, '').replace(/[A-Z]{2,}/g, '')
 );

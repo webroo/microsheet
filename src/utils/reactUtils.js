@@ -19,3 +19,7 @@ export function h(...args) {
   }
   return React.createElement(...args);
 }
+
+export function classNames(names) {
+  return Object.keys(names).filter(key => names[key]).join(' ');
+}

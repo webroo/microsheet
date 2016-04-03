@@ -16,19 +16,32 @@
   }
 
   & td {
+    position: relative;
     text-align: right;
     width: 60px;
 
     & span {
       display: inline-block;
-      padding: 2px;
       width: 100%;
     }
 
     & input {
       border: 0;
-      padding: 2px;
+      padding: 0;
       width: 100%;
     }
+
+    &.selected::before {
+      border: 2px solid #1E90FF;
+      bottom: -1px;
+      content: "";
+      left: -1px;
+      pointer-events: none;
+      position: absolute;
+      right: -1px;
+      top: -1px;
+    }
+
+    &.editing {}
   }
 }

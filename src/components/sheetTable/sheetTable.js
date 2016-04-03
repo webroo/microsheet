@@ -9,8 +9,10 @@ const SheetTable = ({
   sheetData,
   rowHeaderData,
   colHeaderData,
+  selectedCoor,
   editingCoor,
   onEditingCoorChange,
+  onSelectCoorChange,
   onCellValueChange,
 }) => {
   return (
@@ -34,8 +36,10 @@ const SheetTable = ({
                     key={cellIndex}
                     cellData={cell}
                     coor={[rowIndex, cellIndex]}
+                    isSelected={rowIndex === selectedCoor.get(0) && cellIndex === selectedCoor.get(1)}
                     isEditing={rowIndex === editingCoor.get(0) && cellIndex === editingCoor.get(1)}
                     onEditFocus={onEditingCoorChange}
+                    onSelectFocus={onSelectCoorChange}
                     onLoseFocus={() => onEditingCoorChange([null, null])}
                     onValueChange={onCellValueChange}
                   />
@@ -53,8 +57,10 @@ SheetTable.propTypes = {
   sheetData: PropTypes.instanceOf(Immutable.List).isRequired,
   rowHeaderData: PropTypes.instanceOf(Immutable.List).isRequired,
   colHeaderData: PropTypes.instanceOf(Immutable.List).isRequired,
+  selectedCoor: PropTypes.instanceOf(Immutable.List).isRequired,
   editingCoor: PropTypes.instanceOf(Immutable.List).isRequired,
   onEditingCoorChange: PropTypes.func.isRequired,
+  onSelectCoorChange: PropTypes.func.isRequired,
   onCellValueChange: PropTypes.func.isRequired,
 };
 

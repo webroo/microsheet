@@ -29,29 +29,29 @@ describe('isNumber()', () => {
   });
 });
 
-describe('coerceStringToNumber()', () => {
-  const {coerceStringToNumber} = sheetUtils;
+describe('coerceValueToNumber()', () => {
+  const {coerceValueToNumber} = sheetUtils;
 
   it('should change a string that represent a number into an actual number', () => {
-    expect(coerceStringToNumber('0')).to.equal(0);
-    expect(coerceStringToNumber('-0')).to.equal(0);
-    expect(coerceStringToNumber('+0')).to.equal(0);
-    expect(coerceStringToNumber('1')).to.equal(1);
-    expect(coerceStringToNumber('-1')).to.equal(-1);
-    expect(coerceStringToNumber('0.1')).to.equal(0.1);
-    expect(coerceStringToNumber('-0.1')).to.equal(-0.1);
-    expect(coerceStringToNumber('.1')).to.equal(0.1);
-    expect(coerceStringToNumber('-.1')).to.equal(-0.1);
+    expect(coerceValueToNumber('0')).to.equal(0);
+    expect(coerceValueToNumber('-0')).to.equal(0);
+    expect(coerceValueToNumber('+0')).to.equal(0);
+    expect(coerceValueToNumber('1')).to.equal(1);
+    expect(coerceValueToNumber('-1')).to.equal(-1);
+    expect(coerceValueToNumber('0.1')).to.equal(0.1);
+    expect(coerceValueToNumber('-0.1')).to.equal(-0.1);
+    expect(coerceValueToNumber('.1')).to.equal(0.1);
+    expect(coerceValueToNumber('-.1')).to.equal(-0.1);
   });
 
   it('should not change a string if it can\t be coerced into a numer', () => {
-    expect(coerceStringToNumber('')).to.equal('');
-    expect(coerceStringToNumber('a')).to.equal('a');
-    expect(coerceStringToNumber('0a')).to.equal('0a');
-    expect(coerceStringToNumber('.a')).to.equal('.a');
-    expect(coerceStringToNumber('-a')).to.equal('-a');
-    expect(coerceStringToNumber('-1a')).to.equal('-1a');
-    expect(coerceStringToNumber('a1')).to.equal('a1');
+    expect(coerceValueToNumber('')).to.equal('');
+    expect(coerceValueToNumber('a')).to.equal('a');
+    expect(coerceValueToNumber('0a')).to.equal('0a');
+    expect(coerceValueToNumber('.a')).to.equal('.a');
+    expect(coerceValueToNumber('-a')).to.equal('-a');
+    expect(coerceValueToNumber('-1a')).to.equal('-1a');
+    expect(coerceValueToNumber('a1')).to.equal('a1');
   });
 });
 
