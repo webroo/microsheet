@@ -43,6 +43,18 @@ const SheetCell = ({
               event.preventDefault();
               onValueChange(coor, event.target.value);
               onLoseFocus('tab', coor);
+            } else if (event.key === 'ArrowUp') {
+              onValueChange(coor, event.target.value);
+              onLoseFocus('up', coor);
+            } else if (event.key === 'ArrowDown') {
+              onValueChange(coor, event.target.value);
+              onLoseFocus('down', coor);
+            } else if (event.key === 'ArrowLeft') {
+              onValueChange(coor, event.target.value);
+              onLoseFocus('left', coor);
+            } else if (event.key === 'ArrowRight') {
+              onValueChange(coor, event.target.value);
+              onLoseFocus('right', coor);
             }
           }}
           ref={input => {

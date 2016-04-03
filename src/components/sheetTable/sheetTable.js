@@ -26,6 +26,9 @@ const SheetTable = ({
           onMoveSelectedCoor(directions[event.key]);
         } else if (event.key === 'Enter') {
           onEditingCoorChange(selectedCoor.toJS());
+        } else {
+          // Turn on quick edit mode, so the user can move to the next cell by simply pressing the arrow keys
+          onEditingCoorChange(selectedCoor.toJS(), true);
         }
       }}
       ref={table => {
@@ -62,6 +65,14 @@ const SheetTable = ({
                       if (type === 'enter') {
                         onMoveSelectedCoor('down');
                       } else if (type === 'tab') {
+                        onMoveSelectedCoor('right');
+                      } else if (type === 'up') {
+                        onMoveSelectedCoor('up');
+                      } else if (type === 'down') {
+                        onMoveSelectedCoor('down');
+                      } else if (type === 'left') {
+                        onMoveSelectedCoor('left');
+                      } else if (type === 'right') {
                         onMoveSelectedCoor('right');
                       }
                     }}

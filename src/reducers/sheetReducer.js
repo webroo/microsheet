@@ -11,6 +11,7 @@ const initialState = Immutable.fromJS({
     [{raw: 7, val: '7'}, {raw: 8, val: '8'}, {raw: 9, val: '9'}],
   ],
   editingCoor: [null, null],
+  isQuickEdit: false,
   selectedCoor: [null, null],
 });
 
@@ -26,9 +27,10 @@ export const updateCellValue = (coor, value) => ({
   value,
 });
 
-export const changeEditingCoor = coor => ({
+export const changeEditingCoor = (coor, isQuickEdit) => ({
   type: CHANGE_EDITING_COOR,
   coor,
+  isQuickEdit,
 });
 
 export const changeSelectedCoor = coor => ({
@@ -89,7 +91,9 @@ export default function sheetReducer(state = initialState, action) {
     case UPDATE_CELL_VALUE:
       return reduceNewCellValue(state, action.coor, action.value);
     case CHANGE_EDITING_COOR:
-      return state.set('editingCoor', new Immutable.List(action.coor));
+      return state
+        .set('editingCoor', new Immutable.List(action.coor))
+        .set('isQuickEdit', action.isQuickEdit || false);
     case CHANGE_SELECTED_COOR:
       return state.set('selectedCoor', new Immutable.List(action.coor));
     case MOVE_SELECTED_COOR:
