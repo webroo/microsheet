@@ -1,6 +1,12 @@
 import Immutable from 'immutable';
 
-import {computeSheet, coerceValueToNumber, capitalizeCellAddresses} from '../utils/sheetUtils';
+import {createReducer} from '../utils/reduxUtils';
+import {
+  computeSheet,
+  coerceStringToNumber,
+  capitalizeCellAddresses,
+  isFormula,
+} from '../utils/sheetUtils';
 
 // The `raw` property is the underlying user input, and `val` is the evaluated (displayed) output.
 // `val` is always a string as it's just a displayable value in the UI
@@ -10,95 +16,151 @@ const initialState = Immutable.fromJS({
     [{raw: 4, val: '4'}, {raw: 5, val: '5'}, {raw: 6, val: '6'}],
     [{raw: 7, val: '7'}, {raw: 8, val: '8'}, {raw: 9, val: '9'}],
   ],
-  editingCoor: [null, null],
-  isQuickEdit: false,
-  selectedCoor: [null, null],
+
+  isEditingCell: false,
+  editingCellCoor: [null, null],
+  editingCellValue: '',
+  isQuickEditing: false,
+
+  isCellSelected: false,
+  selectedCellCoor: [null, null],
 });
 
-// Action types
-export const UPDATE_CELL_VALUE = 'UPDATE_CELL_VALUE';
-export const CHANGE_EDITING_COOR = 'CHANGE_EDITING_COOR';
-export const CHANGE_SELECTED_COOR = 'CHANGE_SELECTED_COOR';
-export const MOVE_SELECTED_COOR = 'MOVE_SELECTED_COOR';
+export const SET_CELL_VALUE = 'SET_CELL_VALUE';
+export const START_EDITING_CELL = 'START_EDITING_CELL';
+export const SET_EDIT_VALUE = 'SET_EDIT_VALUE';
+export const STOP_EDITING = 'STOP_EDITING';
+export const CLEAR_CELL = 'CLEAR_CELL';
 
-export const updateCellValue = (coor, value) => ({
-  type: UPDATE_CELL_VALUE,
+export const SET_SELECTED_CELL = 'SET_SELECTED_CELL';
+export const MOVE_SELECTED_CELL_UP = 'MOVE_SELECTED_CELL_UP';
+export const MOVE_SELECTED_CELL_DOWN = 'MOVE_SELECTED_CELL_DOWN';
+export const MOVE_SELECTED_CELL_LEFT = 'MOVE_SELECTED_CELL_LEFT';
+export const MOVE_SELECTED_CELL_RIGHT = 'MOVE_SELECTED_CELL_RIGHT';
+
+export const setCellValue = (coor, value) => ({
+  type: SET_CELL_VALUE,
   coor,
   value,
 });
 
-export const changeEditingCoor = (coor, isQuickEdit) => ({
-  type: CHANGE_EDITING_COOR,
+export const setEditValue = value => ({
+  type: SET_EDIT_VALUE,
+  value,
+});
+
+export const startEditingCell = (coor, isQuick) => ({
+  type: START_EDITING_CELL,
   coor,
-  isQuickEdit,
+  isQuick,
 });
 
-export const changeSelectedCoor = coor => ({
-  type: CHANGE_SELECTED_COOR,
+export const stopEditing = () => ({
+  type: STOP_EDITING,
+});
+
+export const clearCell = coor => ({
+  type: CLEAR_CELL,
   coor,
 });
 
-export const moveSelectedCoor = direction => ({
-  type: MOVE_SELECTED_COOR,
-  direction,
+export const setSelectedCell = coor => ({
+  type: SET_SELECTED_CELL,
+  coor,
 });
 
-function reduceNewCellValue(state, cellCoor, cellValue) {
-  let newCellValue;
-  let newState;
+export const moveSelectedCellUp = () => ({
+  type: MOVE_SELECTED_CELL_UP,
+});
 
-  if (typeof cellValue === 'string' && cellValue.charAt(0) === '=') {
-    // Attempts to capitalize cell addresses in expressions, eg: '=a1+b2' becomes '=A1+B2'
-    newCellValue = capitalizeCellAddresses(cellValue);
-  } else {
-    // Attempts to cast the string value from the input field to a number, otherwise keeps as string
-    newCellValue = coerceValueToNumber(cellValue);
-  }
+export const moveSelectedCellDown = () => ({
+  type: MOVE_SELECTED_CELL_DOWN,
+});
 
-  // cellCoor is an array of two numbers (eg: [2,3]) so we can use it directly with Immutable's setIn()
-  newState = state.setIn(['data', ...cellCoor, 'raw'], newCellValue);
+export const moveSelectedCellLeft = () => ({
+  type: MOVE_SELECTED_CELL_LEFT,
+});
 
-  // Evaluates every cell's `raw` property and sets the corresponding `val` property
-  newState = state.set('data', computeSheet(newState.get('data')));
+export const moveSelectedCellRight = () => ({
+  type: MOVE_SELECTED_CELL_RIGHT,
+});
 
-  return newState;
-}
+const actionHandlers = {
+  SET_CELL_VALUE(state, action) {
+    let value = action.value;
+    let data = state.get('data');
 
-function reduceMoveSelectedCoor(state, direction) {
-  if (state.getIn(['selectedCoor', 0]) === null || state.getIn(['selectedCoor', 1]) === null) {
-    return state;
-  }
+    if (isFormula(value)) {
+      value = capitalizeCellAddresses(action.value);
+    } else {
+      value = coerceStringToNumber(action.value);
+    }
 
-  const maxCols = state.getIn(['data', 0]).size - 1;
-  const maxRows = state.get('data').size - 1;
+    data = data.setIn([...action.coor, 'raw'], value);
+    data = computeSheet(data);
+    return state.set('data', data);
+  },
 
-  switch (direction) {
-    case 'up':
-      return state.setIn(['selectedCoor', 0], Math.max(0, state.getIn(['selectedCoor', 0]) - 1));
-    case 'down':
-      return state.setIn(['selectedCoor', 0], Math.min(maxCols, state.getIn(['selectedCoor', 0]) + 1));
-    case 'left':
-      return state.setIn(['selectedCoor', 1], Math.max(0, state.getIn(['selectedCoor', 1]) - 1));
-    case 'right':
-      return state.setIn(['selectedCoor', 1], Math.min(maxRows, state.getIn(['selectedCoor', 1]) + 1));
-    default:
-      return state;
-  }
-}
+  SET_EDIT_VALUE(state, action) {
+    return state.set('editingCellValue', action.value);
+  },
 
-export default function sheetReducer(state = initialState, action) {
-  switch (action.type) {
-    case UPDATE_CELL_VALUE:
-      return reduceNewCellValue(state, action.coor, action.value);
-    case CHANGE_EDITING_COOR:
-      return state
-        .set('editingCoor', new Immutable.List(action.coor))
-        .set('isQuickEdit', action.isQuickEdit || false);
-    case CHANGE_SELECTED_COOR:
-      return state.set('selectedCoor', new Immutable.List(action.coor));
-    case MOVE_SELECTED_COOR:
-      return reduceMoveSelectedCoor(state, action.direction);
-    default:
-      return state;
-  }
-}
+  START_EDITING_CELL(state, action) {
+    return state
+      .set('isEditingCell', true)
+      .set('isQuickEditing', action.isQuick || false)
+      .set('editingCellCoor', new Immutable.List(action.coor))
+      .set('editingCellValue', state.getIn(['data', ...action.coor, 'raw']));
+  },
+
+  STOP_EDITING(state) {
+    return state
+      .set('isEditingCell', false)
+      .set('isQuickEditing', false)
+      .set('editingCellCoor', new Immutable.List([null, null]))
+      .set('editingCellValue', '');
+  },
+
+  CLEAR_CELL(state, action) {
+    return actionHandlers.SET_CELL_VALUE(state, {
+      coor: action.coor,
+      value: '',
+    });
+  },
+
+  SET_SELECTED_CELL(state, action) {
+    return state.set('selectedCellCoor', new Immutable.List(action.coor));
+  },
+
+  MOVE_SELECTED_CELL_UP(state) {
+    return state.setIn(
+      ['selectedCellCoor', 0],
+      Math.max(0, state.getIn(['selectedCellCoor', 0]) - 1)
+    );
+  },
+
+  MOVE_SELECTED_CELL_DOWN(state) {
+    const maxCols = state.getIn(['data', 0]).size - 1;
+    return state.setIn(
+      ['selectedCellCoor', 0],
+      Math.min(maxCols, state.getIn(['selectedCellCoor', 0]) + 1)
+    );
+  },
+
+  MOVE_SELECTED_CELL_LEFT(state) {
+    return state.setIn(
+      ['selectedCellCoor', 1],
+      Math.max(0, state.getIn(['selectedCellCoor', 1]) - 1)
+    );
+  },
+
+  MOVE_SELECTED_CELL_RIGHT(state) {
+    const maxRows = state.get('data').size - 1;
+    return state.setIn(
+      ['selectedCellCoor', 1],
+      Math.min(maxRows, state.getIn(['selectedCellCoor', 1]) + 1)
+    );
+  },
+};
+
+export default createReducer(initialState, actionHandlers);

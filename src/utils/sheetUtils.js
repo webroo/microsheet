@@ -2,9 +2,11 @@ export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 export const isNumber = n => !isNaN(parseFloat(n)) && isFinite(n);
 
-export const coerceValueToNumber = n => (isNumber(n) ? parseFloat(n) : n);
+export const coerceStringToNumber = n => (isNumber(n) ? parseFloat(n) : n);
 
 export const getCellAddrFromCoor = coor => `${ALPHABET[coor[1]]}${coor[0] + 1}`;
+
+export const isFormula = value => typeof value === 'string' && value.charAt(0) === '=';
 
 export const capitalizeCellAddresses = expr => (
   // Only capitalizes sequences with one lowercase letter and 1 or 2 numbers, eg: a1 or a11
@@ -17,7 +19,7 @@ export const sanitizeExpression = expr => (
   expr.replace(/[^+\-*/().:\dA-Z]/g, '').replace(/[A-Z]{2,}/g, '')
 );
 
-export const computeSheet = (sheet) => {
+export const computeSheet = sheet => {
   // Reduces the nested Immutable List down to an object map where the keys are cell addresses.
   // Cell addresses are prefixed with an underscore symbol. This allows us to create non-underscore
   // counterparts as getters, which will compute expressions.

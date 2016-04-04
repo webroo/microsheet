@@ -9,33 +9,50 @@ const SheetTable = ({
   sheetData,
   rowHeaderData,
   colHeaderData,
-  selectedCoor,
-  editingCoor,
-  onEditingCoorChange,
-  onSelectCoorChange,
-  onMoveSelectedCoor,
-  onCellValueChange,
+  isEditingCell,
+  isQuickEditing,
+  editingCellCoor,
+  editingCellValue,
+  isCellSelected,
+  selectedCellCoor,
+  setCellValue,
+  setEditValue,
+  startEditingCell,
+  stopEditing,
+  clearCell,
+  setSelectedCell,
+  moveSelectedCellUp,
+  moveSelectedCellDown,
+  moveSelectedCellLeft,
+  moveSelectedCellRight,
 }) => {
   return (
     <table
       tabIndex="0"
       className={styles.sheetTable}
       onKeyDown={event => {
-        const directions = {ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right'};
-        if (Object.keys(directions).includes(event.key)) {
-          onMoveSelectedCoor(directions[event.key]);
+        if (event.key === 'ArrowUp') {
+          moveSelectedCellUp();
+        } else if (event.key === 'ArrowDown') {
+          moveSelectedCellDown();
+        } else if (event.key === 'ArrowLeft') {
+          moveSelectedCellLeft();
+        } else if (event.key === 'ArrowRight') {
+          moveSelectedCellRight();
         } else if (event.key === 'Enter') {
-          onEditingCoorChange(selectedCoor.toJS());
+          startEditingCell(selectedCellCoor.toJS());
         } else if (event.key === 'Backspace' || event.key === 'Delete') {
           event.preventDefault();
-          onCellValueChange(selectedCoor.toJS(), '');
+          console.log('clearCell:', clearCell);
+          console.log('selectedCellCoor:', selectedCellCoor.toJS());
+          clearCell(selectedCellCoor.toJS());
         } else {
           // Turn on quick edit mode, so the user can move to the next cell by simply pressing the arrow keys
-          onEditingCoorChange(selectedCoor.toJS(), true);
+          startEditingCell(selectedCellCoor.toJS(), true);
         }
       }}
       ref={table => {
-        if (table && (editingCoor.get(0) === null && editingCoor.get(1) === null)) {
+        if (table && (editingCellCoor.get(0) === null && editingCellCoor.get(1) === null)) {
           table.focus();
         }
       }}
@@ -59,27 +76,27 @@ const SheetTable = ({
                     key={cellIndex}
                     cellData={cell}
                     coor={[rowIndex, cellIndex]}
-                    isSelected={rowIndex === selectedCoor.get(0) && cellIndex === selectedCoor.get(1)}
-                    isEditing={rowIndex === editingCoor.get(0) && cellIndex === editingCoor.get(1)}
-                    onEditFocus={onEditingCoorChange}
-                    onSelectFocus={onSelectCoorChange}
+                    isSelected={rowIndex === selectedCellCoor.get(0) && cellIndex === selectedCellCoor.get(1)}
+                    isEditing={rowIndex === editingCellCoor.get(0) && cellIndex === editingCellCoor.get(1)}
+                    onEditFocus={startEditingCell}
+                    onSelectFocus={setSelectedCell}
                     onLoseFocus={type => {
-                      onEditingCoorChange([null, null]);
+                      stopEditing();
                       if (type === 'enter') {
-                        onMoveSelectedCoor('down');
+                        moveSelectedCellDown();
                       } else if (type === 'tab') {
-                        onMoveSelectedCoor('right');
+                        moveSelectedCellRight();
                       } else if (type === 'up') {
-                        onMoveSelectedCoor('up');
+                        moveSelectedCellUp();
                       } else if (type === 'down') {
-                        onMoveSelectedCoor('down');
+                        moveSelectedCellDown();
                       } else if (type === 'left') {
-                        onMoveSelectedCoor('left');
+                        moveSelectedCellLeft();
                       } else if (type === 'right') {
-                        onMoveSelectedCoor('right');
+                        moveSelectedCellRight();
                       }
                     }}
-                    onValueChange={onCellValueChange}
+                    onValueChange={setCellValue}
                   />
                 ))
               }
@@ -95,12 +112,21 @@ SheetTable.propTypes = {
   sheetData: PropTypes.instanceOf(Immutable.List).isRequired,
   rowHeaderData: PropTypes.instanceOf(Immutable.List).isRequired,
   colHeaderData: PropTypes.instanceOf(Immutable.List).isRequired,
-  selectedCoor: PropTypes.instanceOf(Immutable.List).isRequired,
-  editingCoor: PropTypes.instanceOf(Immutable.List).isRequired,
-  onEditingCoorChange: PropTypes.func.isRequired,
-  onSelectCoorChange: PropTypes.func.isRequired,
-  onMoveSelectedCoor: PropTypes.func.isRequired,
-  onCellValueChange: PropTypes.func.isRequired,
+  isEditingCell: PropTypes.bool,
+  isQuickEditing: PropTypes.bool,
+  editingCellCoor: PropTypes.instanceOf(Immutable.List).isRequired,
+  editingCellValue: PropTypes.any,
+  isCellSelected: PropTypes.bool,
+  selectedCellCoor: PropTypes.instanceOf(Immutable.List).isRequired,
+  setCellValue: PropTypes.func.isRequired,
+  setEditValue: PropTypes.func.isRequired,
+  startEditingCell: PropTypes.func.isRequired,
+  stopEditing: PropTypes.func.isRequired,
+  setSelectedCell: PropTypes.func.isRequired,
+  moveSelectedCellUp: PropTypes.func.isRequired,
+  moveSelectedCellDown: PropTypes.func.isRequired,
+  moveSelectedCellLeft: PropTypes.func.isRequired,
+  moveSelectedCellRight: PropTypes.func.isRequired,
 };
 
 export default SheetTable;
