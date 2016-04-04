@@ -6,6 +6,10 @@ export const coerceStringToNumber = n => (isNumber(n) ? parseFloat(n) : n);
 
 export const getCellAddrFromCoor = coor => `${ALPHABET[coor[1]]}${coor[0] + 1}`;
 
+export const isMatchingCoors = (coorA, coorB) => (
+  coorA[0] === coorB[0] && coorA[1] === coorB[1]
+);
+
 export const isFormula = value => typeof value === 'string' && value.charAt(0) === '=';
 
 export const capitalizeCellAddresses = expr => (

@@ -20,6 +20,7 @@ const initialState = Immutable.fromJS({
   isEditingCell: false,
   editingCellCoor: [null, null],
   editingCellValue: '',
+  isEditingValueDirty: false,
   isQuickEditing: false,
 
   isCellSelected: false,
@@ -102,7 +103,9 @@ const actionHandlers = {
   },
 
   SET_EDIT_VALUE(state, action) {
-    return state.set('editingCellValue', action.value);
+    return state
+      .set('editingCellValue', action.value)
+      .set('isEditingValueDirty', true);
   },
 
   START_EDITING_CELL(state, action) {
@@ -110,7 +113,8 @@ const actionHandlers = {
       .set('isEditingCell', true)
       .set('isQuickEditing', action.isQuick || false)
       .set('editingCellCoor', new Immutable.List(action.coor))
-      .set('editingCellValue', state.getIn(['data', ...action.coor, 'raw']));
+      .set('editingCellValue', state.getIn(['data', ...action.coor, 'raw']))
+      .set('isEditingValueDirty', false);
   },
 
   STOP_EDITING(state) {
@@ -118,7 +122,8 @@ const actionHandlers = {
       .set('isEditingCell', false)
       .set('isQuickEditing', false)
       .set('editingCellCoor', new Immutable.List([null, null]))
-      .set('editingCellValue', '');
+      .set('editingCellValue', '')
+      .set('isEditingValueDirty', false);
   },
 
   CLEAR_CELL(state, action) {

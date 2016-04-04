@@ -3,7 +3,8 @@ import styles from './sheetTable.css';
 import Immutable from 'immutable';
 import React, {PropTypes} from 'react';
 
-import SheetCell from './sheetCell';
+import {isMatchingCoors} from '../../utils/sheetUtils';
+import {classNames} from '../../utils/reactUtils';
 
 const SheetTable = ({
   sheetData,
@@ -13,7 +14,7 @@ const SheetTable = ({
   isQuickEditing,
   editingCellCoor,
   editingCellValue,
-  isCellSelected,
+  isEditingValueDirty,
   selectedCellCoor,
   setCellValue,
   setEditValue,
@@ -31,7 +32,16 @@ const SheetTable = ({
       tabIndex="0"
       className={styles.sheetTable}
       onKeyDown={event => {
-        if (event.key === 'ArrowUp') {
+        // Key events don't reach here from within the editable cell input field
+        if (event.key === 'Enter') {
+          startEditingCell(selectedCellCoor.toJS());
+        } else if (event.key === 'Tab') {
+          event.preventDefault();
+          moveSelectedCellRight();
+        } else if (event.key === 'Backspace' || event.key === 'Delete') {
+          event.preventDefault();
+          clearCell(selectedCellCoor.toJS());
+        } else if (event.key === 'ArrowUp') {
           moveSelectedCellUp();
         } else if (event.key === 'ArrowDown') {
           moveSelectedCellDown();
@@ -39,20 +49,12 @@ const SheetTable = ({
           moveSelectedCellLeft();
         } else if (event.key === 'ArrowRight') {
           moveSelectedCellRight();
-        } else if (event.key === 'Enter') {
-          startEditingCell(selectedCellCoor.toJS());
-        } else if (event.key === 'Backspace' || event.key === 'Delete') {
-          event.preventDefault();
-          console.log('clearCell:', clearCell);
-          console.log('selectedCellCoor:', selectedCellCoor.toJS());
-          clearCell(selectedCellCoor.toJS());
         } else {
-          // Turn on quick edit mode, so the user can move to the next cell by simply pressing the arrow keys
           startEditingCell(selectedCellCoor.toJS(), true);
         }
       }}
       ref={table => {
-        if (table && (editingCellCoor.get(0) === null && editingCellCoor.get(1) === null)) {
+        if (table && !isEditingCell) {
           table.focus();
         }
       }}
@@ -71,34 +73,81 @@ const SheetTable = ({
             <tr key={rowIndex}>
               <th scope="row">{colHeaderData.get(rowIndex)}</th>
               {
-                row.map((cell, cellIndex) => (
-                  <SheetCell
-                    key={cellIndex}
-                    cellData={cell}
-                    coor={[rowIndex, cellIndex]}
-                    isSelected={rowIndex === selectedCellCoor.get(0) && cellIndex === selectedCellCoor.get(1)}
-                    isEditing={rowIndex === editingCellCoor.get(0) && cellIndex === editingCellCoor.get(1)}
-                    onEditFocus={startEditingCell}
-                    onSelectFocus={setSelectedCell}
-                    onLoseFocus={type => {
-                      stopEditing();
-                      if (type === 'enter') {
-                        moveSelectedCellDown();
-                      } else if (type === 'tab') {
-                        moveSelectedCellRight();
-                      } else if (type === 'up') {
-                        moveSelectedCellUp();
-                      } else if (type === 'down') {
-                        moveSelectedCellDown();
-                      } else if (type === 'left') {
-                        moveSelectedCellLeft();
-                      } else if (type === 'right') {
-                        moveSelectedCellRight();
+                row.map((cell, cellIndex) => {
+                  const cellCoor = [rowIndex, cellIndex];
+                  const isSelected = isMatchingCoors(cellCoor, selectedCellCoor.toJS());
+                  const isEditing = isMatchingCoors(cellCoor, editingCellCoor.toJS());
+                  const cssClass = classNames({
+                    [styles.selected]: isSelected,
+                    [styles.editing]: isEditing,
+                  });
+
+                  return (
+                    <td key={cellIndex} className={cssClass}>
+                      {
+                        isEditing ?
+                          <input
+                            type="text"
+                            value={editingCellValue}
+                            onChange={event => setEditValue(event.target.value)}
+                            onBlur={() => {
+                              setCellValue(cellCoor, editingCellValue);
+                              stopEditing();
+                            }}
+                            onKeyDown={event => {
+                              event.stopPropagation();
+                              if (event.key === 'Enter') {
+                                setCellValue(cellCoor, editingCellValue);
+                                stopEditing();
+                                moveSelectedCellDown();
+                              } else if (event.key === 'Escape') {
+                                event.preventDefault();
+                                stopEditing();
+                              } else if (event.key === 'Tab') {
+                                event.preventDefault();
+                                setCellValue(cellCoor, editingCellValue);
+                                stopEditing();
+                                moveSelectedCellRight();
+                              }
+
+                              if (isQuickEditing) {
+                                if (event.key === 'ArrowUp') {
+                                  setCellValue(cellCoor, editingCellValue);
+                                  stopEditing();
+                                  moveSelectedCellUp();
+                                } else if (event.key === 'ArrowDown') {
+                                  setCellValue(cellCoor, editingCellValue);
+                                  stopEditing();
+                                  moveSelectedCellDown();
+                                } else if (event.key === 'ArrowLeft') {
+                                  setCellValue(cellCoor, editingCellValue);
+                                  stopEditing();
+                                  moveSelectedCellLeft();
+                                } else if (event.key === 'ArrowRight') {
+                                  setCellValue(cellCoor, editingCellValue);
+                                  stopEditing();
+                                  moveSelectedCellRight();
+                                }
+                              }
+                            }}
+                            ref={input => {
+                              if (input && !isEditingValueDirty) {
+                                input.focus();
+                                input.select();
+                              }
+                            }}
+                          />
+                        :
+                        <div
+                          onMouseDown={() => setSelectedCell(cellCoor)}
+                          onDoubleClick={() => startEditingCell(cellCoor)}
+                        >
+                          {cell.get('val')}
+                        </div>
                       }
-                    }}
-                    onValueChange={setCellValue}
-                  />
-                ))
+                    </td>
+                  );
+                })
               }
             </tr>
           ))
@@ -116,12 +165,14 @@ SheetTable.propTypes = {
   isQuickEditing: PropTypes.bool,
   editingCellCoor: PropTypes.instanceOf(Immutable.List).isRequired,
   editingCellValue: PropTypes.any,
+  isEditingValueDirty: PropTypes.bool,
   isCellSelected: PropTypes.bool,
   selectedCellCoor: PropTypes.instanceOf(Immutable.List).isRequired,
   setCellValue: PropTypes.func.isRequired,
   setEditValue: PropTypes.func.isRequired,
   startEditingCell: PropTypes.func.isRequired,
   stopEditing: PropTypes.func.isRequired,
+  clearCell: PropTypes.func.isRequired,
   setSelectedCell: PropTypes.func.isRequired,
   moveSelectedCellUp: PropTypes.func.isRequired,
   moveSelectedCellDown: PropTypes.func.isRequired,
