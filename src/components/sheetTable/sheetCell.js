@@ -65,14 +65,14 @@ const SheetCell = ({
           }}
         />
         :
-        <span
+        <div
           onMouseDown={() => onSelectFocus(coor)}
           onDoubleClick={() => onEditFocus(coor)}
         >
           {
             cellData.get('val')
           }
-        </span>
+        </div>
       }
     </td>
   );

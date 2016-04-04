@@ -26,6 +26,9 @@ const SheetTable = ({
           onMoveSelectedCoor(directions[event.key]);
         } else if (event.key === 'Enter') {
           onEditingCoorChange(selectedCoor.toJS());
+        } else if (event.key === 'Backspace' || event.key === 'Delete') {
+          event.preventDefault();
+          onCellValueChange(selectedCoor.toJS(), '');
         } else {
           // Turn on quick edit mode, so the user can move to the next cell by simply pressing the arrow keys
           onEditingCoorChange(selectedCoor.toJS(), true);
