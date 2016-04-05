@@ -3,7 +3,7 @@ import styles from './sheetTable.css';
 import Immutable from 'immutable';
 import React, {PropTypes} from 'react';
 
-import {isMatchingCoors} from '../../utils/sheetUtils';
+import {isMatchingCoors, isCoorInRange} from '../../utils/sheetUtils';
 import {classNames} from '../../utils/reactUtils';
 
 const SheetTable = ({
@@ -26,6 +26,12 @@ const SheetTable = ({
   moveSelectedCellDown,
   moveSelectedCellLeft,
   moveSelectedCellRight,
+  selectedRangeCoors,
+  isRangeSelected,
+  isSelectingRange,
+  setSelectedRange,
+  startSelectingRange,
+  stopSelectingRange,
 }) => {
   return (
     <table
@@ -77,9 +83,11 @@ const SheetTable = ({
                   const cellCoor = [rowIndex, cellIndex];
                   const isSelected = isMatchingCoors(cellCoor, selectedCellCoor.toJS());
                   const isEditing = isMatchingCoors(cellCoor, editingCellCoor.toJS());
+                  const isInRange = isRangeSelected && isCoorInRange(cellCoor, selectedRangeCoors.toJS());
                   const cssClass = classNames({
                     [styles.selected]: isSelected,
                     [styles.editing]: isEditing,
+                    [styles.rangeSelected]: isInRange,
                   });
 
                   return (
@@ -139,7 +147,20 @@ const SheetTable = ({
                           />
                         :
                         <div
-                          onMouseDown={() => setSelectedCell(cellCoor)}
+                          onMouseDown={() => {
+                            setSelectedCell(cellCoor);
+                            startSelectingRange();
+                          }}
+                          onMouseUp={() => {
+                            if (isSelectingRange) {
+                              stopSelectingRange();
+                            }
+                          }}
+                          onMouseOver={() => {
+                            if (isSelectingRange) {
+                              setSelectedRange([selectedCellCoor.toJS(), cellCoor]);
+                            }
+                          }}
                           onDoubleClick={() => startEditingCell(cellCoor)}
                         >
                           {cell.get('val')}
@@ -178,6 +199,12 @@ SheetTable.propTypes = {
   moveSelectedCellDown: PropTypes.func.isRequired,
   moveSelectedCellLeft: PropTypes.func.isRequired,
   moveSelectedCellRight: PropTypes.func.isRequired,
+  selectedRangeCoors: PropTypes.instanceOf(Immutable.List).isRequired,
+  isRangeSelected: PropTypes.bool.isRequired,
+  isSelectingRange: PropTypes.bool.isRequired,
+  setSelectedRange: PropTypes.func.isRequired,
+  startSelectingRange: PropTypes.func.isRequired,
+  stopSelectingRange: PropTypes.func.isRequired,
 };
 
 export default SheetTable;

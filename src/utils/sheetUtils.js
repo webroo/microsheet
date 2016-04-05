@@ -10,6 +10,16 @@ export const isMatchingCoors = (coorA, coorB) => (
   coorA[0] === coorB[0] && coorA[1] === coorB[1]
 );
 
+export const isCoorInRange = (coor, range) => {
+  return coor[0] >= range[0][0] && coor[0] <= range[1][0] &&
+    coor[1] >= range[0][1] && coor[1] <= range[1][1];
+};
+
+export const positivizeRange = range => ([
+  [Math.min(range[0][0], range[1][0]), Math.min(range[0][1], range[1][1])],
+  [Math.max(range[0][0], range[1][0]), Math.max(range[0][1], range[1][1])],
+]);
+
 export const isFormula = value => typeof value === 'string' && value.charAt(0) === '=';
 
 export const capitalizeCellAddresses = expr => (

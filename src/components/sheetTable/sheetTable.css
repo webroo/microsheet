@@ -2,6 +2,12 @@
   border-collapse: collapse;
   outline: none;
 
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
   & th, & td {
     border: 1px solid #CCC;
     font-weight: normal;
@@ -34,7 +40,7 @@
     }
 
     &.selected::before {
-      border: 2px solid #1E90FF;
+      border: 2px solid #4285F4;
       bottom: -1px;
       content: "";
       left: -1px;
@@ -42,6 +48,10 @@
       position: absolute;
       right: -1px;
       top: -1px;
+    }
+
+    &.rangeSelected {
+      background-color: #ECF3FF;
     }
 
     &.editing {}

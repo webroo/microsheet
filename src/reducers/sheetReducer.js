@@ -6,6 +6,7 @@ import {
   coerceStringToNumber,
   capitalizeCellAddresses,
   isFormula,
+  positivizeRange,
 } from '../utils/sheetUtils';
 
 // The `raw` property is the underlying user input, and `val` is the evaluated (displayed) output.
@@ -25,6 +26,10 @@ const initialState = Immutable.fromJS({
 
   isCellSelected: false,
   selectedCellCoor: [null, null],
+
+  isRangeSelected: false,
+  isSelectingRange: false,
+  selectedRangeCoors: [[null, null], [null, null]],
 });
 
 export const SET_CELL_VALUE = 'SET_CELL_VALUE';
@@ -38,6 +43,10 @@ export const MOVE_SELECTED_CELL_UP = 'MOVE_SELECTED_CELL_UP';
 export const MOVE_SELECTED_CELL_DOWN = 'MOVE_SELECTED_CELL_DOWN';
 export const MOVE_SELECTED_CELL_LEFT = 'MOVE_SELECTED_CELL_LEFT';
 export const MOVE_SELECTED_CELL_RIGHT = 'MOVE_SELECTED_CELL_RIGHT';
+
+export const START_SELECTING_RANGE = 'START_SELECTING_RANGE';
+export const STOP_SELECTING_RANGE = 'STOP_SELECTING_RANGE';
+export const SET_SELECTED_RANGE = 'SET_SELECTED_RANGE';
 
 export const setCellValue = (coor, value) => ({
   type: SET_CELL_VALUE,
@@ -86,6 +95,26 @@ export const moveSelectedCellRight = () => ({
   type: MOVE_SELECTED_CELL_RIGHT,
 });
 
+export const setSelectedRange = range => ({
+  type: SET_SELECTED_RANGE,
+  range,
+});
+
+export const startSelectingRange = () => ({
+  type: START_SELECTING_RANGE,
+});
+
+export const stopSelectingRange = () => ({
+  type: STOP_SELECTING_RANGE,
+});
+
+function clearRangeSelection(state) {
+  return state
+    .set('isRangeSelected', false)
+    .set('isSelectingRange', false)
+    .set('selectedRangeCoors', Immutable.fromJS([[null, null], [null, null]]));
+}
+
 const actionHandlers = {
   SET_CELL_VALUE(state, action) {
     let value = action.value;
@@ -109,7 +138,7 @@ const actionHandlers = {
   },
 
   START_EDITING_CELL(state, action) {
-    return state
+    return clearRangeSelection(state)
       .set('isEditingCell', true)
       .set('isQuickEditing', action.isQuick || false)
       .set('editingCellCoor', new Immutable.List(action.coor))
@@ -134,37 +163,49 @@ const actionHandlers = {
   },
 
   SET_SELECTED_CELL(state, action) {
-    return state.set('selectedCellCoor', new Immutable.List(action.coor));
+    return clearRangeSelection(state)
+      .set('selectedCellCoor', new Immutable.List(action.coor));
   },
 
   MOVE_SELECTED_CELL_UP(state) {
-    return state.setIn(
-      ['selectedCellCoor', 0],
-      Math.max(0, state.getIn(['selectedCellCoor', 0]) - 1)
-    );
+    let coor = state.get('selectedCellCoor');
+    coor = coor.set(0, Math.max(0, coor.get(0) - 1));
+    return actionHandlers.SET_SELECTED_CELL(state, {coor});
   },
 
   MOVE_SELECTED_CELL_DOWN(state) {
     const maxCols = state.getIn(['data', 0]).size - 1;
-    return state.setIn(
-      ['selectedCellCoor', 0],
-      Math.min(maxCols, state.getIn(['selectedCellCoor', 0]) + 1)
-    );
+    let coor = state.get('selectedCellCoor');
+    coor = coor.set(0, Math.min(maxCols, coor.get(0) + 1));
+    return actionHandlers.SET_SELECTED_CELL(state, {coor});
   },
 
   MOVE_SELECTED_CELL_LEFT(state) {
-    return state.setIn(
-      ['selectedCellCoor', 1],
-      Math.max(0, state.getIn(['selectedCellCoor', 1]) - 1)
-    );
+    let coor = state.get('selectedCellCoor');
+    coor = coor.set(1, Math.max(0, coor.get(1) - 1));
+    return actionHandlers.SET_SELECTED_CELL(state, {coor});
   },
 
   MOVE_SELECTED_CELL_RIGHT(state) {
     const maxRows = state.get('data').size - 1;
-    return state.setIn(
-      ['selectedCellCoor', 1],
-      Math.min(maxRows, state.getIn(['selectedCellCoor', 1]) + 1)
-    );
+    let coor = state.get('selectedCellCoor');
+    coor = coor.set(1, Math.min(maxRows, coor.get(1) + 1));
+    return actionHandlers.SET_SELECTED_CELL(state, {coor});
+  },
+
+  START_SELECTING_RANGE(state) {
+    return state.set('isSelectingRange', true);
+  },
+
+  STOP_SELECTING_RANGE(state) {
+    return state.set('isSelectingRange', false);
+  },
+
+  SET_SELECTED_RANGE(state, action) {
+    const positiveRange = positivizeRange(action.range);
+    return state
+      .set('isRangeSelected', true)
+      .set('selectedRangeCoors', Immutable.fromJS(positiveRange));
   },
 };
 
