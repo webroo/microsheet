@@ -1,5 +1,7 @@
 .sheetTable {
   border-collapse: collapse;
+  cursor: default;
+  display: inline-block; /* fixes edge case bug with user-select rule */
   outline: none;
 
   -webkit-touch-callout: none;
@@ -35,6 +37,7 @@
 
     & input {
       border: 0;
+      cursor: text;
       padding: 0;
       width: 100%;
     }

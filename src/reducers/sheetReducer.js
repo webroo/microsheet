@@ -168,6 +168,7 @@ const actionHandlers = {
 
   SET_SELECTED_CELL(state, action) {
     return clearRangeSelection(state)
+      .set('isCellSelected', true)
       .set('selectedCellCoor', new Immutable.List(action.coor));
   },
 
