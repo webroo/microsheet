@@ -36,7 +36,7 @@ export const SET_CELL_VALUE = 'SET_CELL_VALUE';
 export const START_EDITING_CELL = 'START_EDITING_CELL';
 export const SET_EDIT_VALUE = 'SET_EDIT_VALUE';
 export const STOP_EDITING = 'STOP_EDITING';
-export const CLEAR_CELL = 'CLEAR_CELL';
+export const CLEAR_CELL_RANGE = 'CLEAR_CELL_RANGE';
 
 export const SET_SELECTED_CELL = 'SET_SELECTED_CELL';
 export const MOVE_SELECTED_CELL_UP = 'MOVE_SELECTED_CELL_UP';
@@ -69,9 +69,9 @@ export const stopEditing = () => ({
   type: STOP_EDITING,
 });
 
-export const clearCell = coor => ({
-  type: CLEAR_CELL,
-  coor,
+export const clearCellRange = range => ({
+  type: CLEAR_CELL_RANGE,
+  range,
 });
 
 export const setSelectedCell = coor => ({
@@ -155,11 +155,15 @@ const actionHandlers = {
       .set('isEditingValueDirty', false);
   },
 
-  CLEAR_CELL(state, action) {
-    return actionHandlers.SET_CELL_VALUE(state, {
-      coor: action.coor,
-      value: '',
-    });
+  CLEAR_CELL_RANGE(state, action) {
+    let data = state.get('data');
+    for (let rowIndex = action.range[0][0]; rowIndex <= action.range[1][0]; rowIndex++) {
+      for (let cellIndex = action.range[0][1]; cellIndex <= action.range[1][1]; cellIndex++) {
+        data = data.setIn([rowIndex, cellIndex, 'raw'], '');
+      }
+    }
+    data = computeSheet(data);
+    return state.set('data', data);
   },
 
   SET_SELECTED_CELL(state, action) {
@@ -174,9 +178,9 @@ const actionHandlers = {
   },
 
   MOVE_SELECTED_CELL_DOWN(state) {
-    const maxCols = state.getIn(['data', 0]).size - 1;
+    const maxRows = state.get('data').size - 1;
     let coor = state.get('selectedCellCoor');
-    coor = coor.set(0, Math.min(maxCols, coor.get(0) + 1));
+    coor = coor.set(0, Math.min(maxRows, coor.get(0) + 1));
     return actionHandlers.SET_SELECTED_CELL(state, {coor});
   },
 
@@ -187,9 +191,9 @@ const actionHandlers = {
   },
 
   MOVE_SELECTED_CELL_RIGHT(state) {
-    const maxRows = state.get('data').size - 1;
+    const maxCols = state.getIn(['data', 0]).size - 1;
     let coor = state.get('selectedCellCoor');
-    coor = coor.set(1, Math.min(maxRows, coor.get(1) + 1));
+    coor = coor.set(1, Math.min(maxCols, coor.get(1) + 1));
     return actionHandlers.SET_SELECTED_CELL(state, {coor});
   },
 

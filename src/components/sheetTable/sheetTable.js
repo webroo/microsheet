@@ -20,7 +20,7 @@ const SheetTable = ({
   setEditValue,
   startEditingCell,
   stopEditing,
-  clearCell,
+  clearCellRange,
   setSelectedCell,
   moveSelectedCellUp,
   moveSelectedCellDown,
@@ -46,7 +46,11 @@ const SheetTable = ({
           moveSelectedCellRight();
         } else if (event.key === 'Backspace' || event.key === 'Delete') {
           event.preventDefault();
-          clearCell(selectedCellCoor.toJS());
+          if (isRangeSelected) {
+            clearCellRange(selectedRangeCoors.toJS());
+          } else {
+            clearCellRange([selectedCellCoor.toJS(), selectedCellCoor.toJS()]);
+          }
         } else if (event.key === 'ArrowUp') {
           moveSelectedCellUp();
         } else if (event.key === 'ArrowDown') {
@@ -193,7 +197,7 @@ SheetTable.propTypes = {
   setEditValue: PropTypes.func.isRequired,
   startEditingCell: PropTypes.func.isRequired,
   stopEditing: PropTypes.func.isRequired,
-  clearCell: PropTypes.func.isRequired,
+  clearCellRange: PropTypes.func.isRequired,
   setSelectedCell: PropTypes.func.isRequired,
   moveSelectedCellUp: PropTypes.func.isRequired,
   moveSelectedCellDown: PropTypes.func.isRequired,
