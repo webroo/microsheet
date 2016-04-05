@@ -22,6 +22,10 @@ export const positivizeRange = range => ([
 
 export const isFormula = value => typeof value === 'string' && value.charAt(0) === '=';
 
+export const isValidFormulaSymbol = char => {
+  return /[+\-*/()=]/.test(char);
+};
+
 export const capitalizeCellAddresses = expr => (
   // Only capitalizes sequences with one lowercase letter and 1 or 2 numbers, eg: a1 or a11
   expr.replace(/([a-z]\d{1,2})/g, match => match.toUpperCase())

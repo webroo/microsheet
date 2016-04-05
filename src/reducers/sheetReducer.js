@@ -4,6 +4,7 @@ import {createReducer} from '../utils/reduxUtils';
 import {
   computeSheet,
   coerceStringToNumber,
+  getCellAddrFromCoor,
   capitalizeCellAddresses,
   isFormula,
   positivizeRange,
@@ -21,6 +22,7 @@ const initialState = Immutable.fromJS({
   isEditingCell: false,
   editingCellCoor: [null, null],
   editingCellValue: '',
+  editingCellCaretPos: 0,
   isEditingValueDirty: false,
   isQuickEditing: false,
 
@@ -37,6 +39,8 @@ export const START_EDITING_CELL = 'START_EDITING_CELL';
 export const SET_EDIT_VALUE = 'SET_EDIT_VALUE';
 export const STOP_EDITING = 'STOP_EDITING';
 export const CLEAR_CELL_RANGE = 'CLEAR_CELL_RANGE';
+export const SET_EDITING_CELL_CARET_POS = 'SET_EDITING_CELL_CARET_POS';
+export const INSERT_CELL_REF_INTO_EDIT_VALUE = 'INSERT_CELL_REF_INTO_EDIT_VALUE';
 
 export const SET_SELECTED_CELL = 'SET_SELECTED_CELL';
 export const MOVE_SELECTED_CELL_UP = 'MOVE_SELECTED_CELL_UP';
@@ -72,6 +76,16 @@ export const stopEditing = () => ({
 export const clearCellRange = range => ({
   type: CLEAR_CELL_RANGE,
   range,
+});
+
+export const setEditingCellCaretPos = pos => ({
+  type: SET_EDITING_CELL_CARET_POS,
+  pos,
+});
+
+export const insertCellRefIntoEditValue = coor => ({
+  type: INSERT_CELL_REF_INTO_EDIT_VALUE,
+  coor,
 });
 
 export const setSelectedCell = coor => ({
@@ -164,6 +178,20 @@ const actionHandlers = {
     }
     data = computeSheet(data);
     return state.set('data', data);
+  },
+
+  SET_EDITING_CELL_CARET_POS(state, action) {
+    return state
+      .set('editingCellCaretPos', action.pos)
+      .set('isEditingValueDirty', true);
+  },
+
+  INSERT_CELL_REF_INTO_EDIT_VALUE(state, action) {
+    const caretPos = state.get('editingCellCaretPos');
+    const cellAddr = getCellAddrFromCoor(action.coor);
+    const editingValue = state.get('editingCellValue');
+    const newValue = editingValue.substring(0, caretPos) + cellAddr + editingValue.substring(caretPos);
+    return state.set('editingCellValue', newValue);
   },
 
   SET_SELECTED_CELL(state, action) {

@@ -3,7 +3,12 @@ import styles from './sheetTable.css';
 import Immutable from 'immutable';
 import React, {PropTypes} from 'react';
 
-import {isMatchingCoors, isCoorInRange} from '../../utils/sheetUtils';
+import {
+  isMatchingCoors,
+  isCoorInRange,
+  isFormula,
+  isValidFormulaSymbol,
+} from '../../utils/sheetUtils';
 import {classNames} from '../../utils/reactUtils';
 
 class SheetTable extends React.Component {
@@ -35,6 +40,7 @@ class SheetTable extends React.Component {
       isQuickEditing,
       editingCellCoor,
       editingCellValue,
+      editingCellCaretPos,
       isEditingValueDirty,
       selectedCellCoor,
       setCellValue,
@@ -42,6 +48,8 @@ class SheetTable extends React.Component {
       startEditingCell,
       stopEditing,
       clearCellRange,
+      setEditingCellCaretPos,
+      insertCellRefIntoEditValue,
       setSelectedCell,
       moveSelectedCellUp,
       moveSelectedCellDown,
@@ -123,7 +131,12 @@ class SheetTable extends React.Component {
                             <input
                               type="text"
                               value={editingCellValue}
-                              onChange={event => setEditValue(event.target.value)}
+                              onChange={event => {
+                                setEditValue(event.target.value);
+                              }}
+                              onSelect={event => {
+                                setEditingCellCaretPos(event.target.selectionStart);
+                              }}
                               onBlur={() => {
                                 setCellValue(cellCoor, editingCellValue);
                                 stopEditing();
@@ -173,9 +186,17 @@ class SheetTable extends React.Component {
                             />
                           :
                           <div
-                            onMouseDown={() => {
-                              setSelectedCell(cellCoor);
-                              startSelectingRange();
+                            onMouseDown={event => {
+                              if (isEditingCell &&
+                                isFormula(editingCellValue) &&
+                                isValidFormulaSymbol(editingCellValue.charAt(editingCellCaretPos - 1))
+                              ) {
+                                event.preventDefault();
+                                insertCellRefIntoEditValue(cellCoor);
+                              } else {
+                                setSelectedCell(cellCoor);
+                                startSelectingRange();
+                              }
                             }}
                             onMouseUp={() => {
                               if (isSelectingRange) {
@@ -187,7 +208,9 @@ class SheetTable extends React.Component {
                                 setSelectedRange([selectedCellCoor.toJS(), cellCoor]);
                               }
                             }}
-                            onDoubleClick={() => startEditingCell(cellCoor)}
+                            onDoubleClick={() => {
+                              startEditingCell(cellCoor);
+                            }}
                           >
                             {cell.get('val')}
                           </div>
@@ -213,6 +236,7 @@ SheetTable.propTypes = {
   isQuickEditing: PropTypes.bool,
   editingCellCoor: PropTypes.instanceOf(Immutable.List).isRequired,
   editingCellValue: PropTypes.any,
+  editingCellCaretPos: PropTypes.number,
   isEditingValueDirty: PropTypes.bool,
   isCellSelected: PropTypes.bool,
   selectedCellCoor: PropTypes.instanceOf(Immutable.List).isRequired,
@@ -221,6 +245,8 @@ SheetTable.propTypes = {
   startEditingCell: PropTypes.func.isRequired,
   stopEditing: PropTypes.func.isRequired,
   clearCellRange: PropTypes.func.isRequired,
+  setEditingCellCaretPos: PropTypes.func.isRequired,
+  insertCellRefIntoEditValue: PropTypes.func.isRequired,
   setSelectedCell: PropTypes.func.isRequired,
   moveSelectedCellUp: PropTypes.func.isRequired,
   moveSelectedCellDown: PropTypes.func.isRequired,
