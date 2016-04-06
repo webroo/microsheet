@@ -5,13 +5,22 @@ export const isNumber = n => !isNaN(parseFloat(n)) && isFinite(n);
 export const coerceStringToNumber = n => (isNumber(n) ? parseFloat(n) : n);
 
 // The row address value is one-based, whereas the coordinate is zero-based
-export const getCellAddrFromCoor = coor => `${ALPHABET[coor[1]]}${coor[0] + 1}`;
+export const getAddrFromCoor = coor => `${ALPHABET[coor[1]]}${coor[0] + 1}`;
 
-export const getCellCoorFromAddr = addr => {
+export const getCoorFromAddr = addr => {
   // The row address value is one-based, whereas the coordinate is zero-based
   const rowIndex = parseInt(addr.substring(1)) - 1;
   const cellIndex = ALPHABET.indexOf(addr.charAt(0)) > -1 ? ALPHABET.indexOf(addr.charAt(0)) : null;
   return [rowIndex, cellIndex];
+};
+
+export const getAddrRangeFromCoorRange = coorRange => (
+  getAddrFromCoor(coorRange[0]) + ':' + getAddrFromCoor(coorRange[1])
+);
+
+export const getCoorRangeFromAddrRange = addrRange => {
+  const [startAddr, endAddr] = addrRange.split(':');
+  return [getCoorFromAddr(startAddr), getCoorFromAddr(endAddr)];
 };
 
 export const isMatchingCoors = (coorA, coorB) => (
@@ -51,15 +60,9 @@ export const expandCoorRange = range => {
 };
 
 // Expands a compact address range (A1:C3) into a comma separated string of all the addresses
-export const expandAddrRange = range => {
-  // We sort the range addresses so that the smaller one comes first, eg: C3:A1 -> A1:C3
-  const [startAddr, endAddr] = range.split(':').sort();
-  const coorRange = [
-    getCellCoorFromAddr(startAddr),
-    getCellCoorFromAddr(endAddr),
-  ];
-  // Expand the range into an array of all the cell coors, then turn them into addresses
-  const expandedRange = expandCoorRange(coorRange).map(coor => getCellAddrFromCoor(coor));
+export const expandAddrRange = addrRange => {
+  const coorRange = getCoorRangeFromAddrRange(addrRange);
+  const expandedRange = expandCoorRange(coorRange).map(coor => getAddrFromCoor(coor));
   return expandedRange.join(',');
 };
 
@@ -94,7 +97,7 @@ export const computeSheet = sheet => {
   // counterparts as getters, which will compute expressions.
   const cellMap = sheet.reduce((acc, row, rowIndex) => (
     row.reduce((acc, cell, cellIndex) => {
-      acc['_' + getCellAddrFromCoor([rowIndex, cellIndex])] = cell.get('raw');
+      acc['_' + getAddrFromCoor([rowIndex, cellIndex])] = cell.get('raw');
       return acc;
     }, acc)
   ), {});
@@ -130,7 +133,7 @@ export const computeSheet = sheet => {
     return row.map((cell, cellIndex) => {
       let computedVal;
       try {
-        computedVal = cellMap[getCellAddrFromCoor([rowIndex, cellIndex])];
+        computedVal = cellMap[getAddrFromCoor([rowIndex, cellIndex])];
       } catch (error) {
         // Circular references in forumlas will throw a stack overflow error from the getters
         computedVal = '#ERROR!';

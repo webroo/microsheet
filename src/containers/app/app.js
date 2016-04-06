@@ -8,7 +8,9 @@ import {
   stopEditing,
   clearCellRange,
   setEditingCellCaretPos,
-  insertCellRefIntoEditValue,
+  startInsertingFormulaCellRef,
+  stopInsertingFormulaCellRef,
+  updateInsertedCellRef,
   setSelectedCell,
   moveSelectedCellUp,
   moveSelectedCellDown,
@@ -47,6 +49,8 @@ const mapStateToProps = state => ({
   isRangeSelected: state.getIn(['sheet', 'isRangeSelected']),
   isSelectingRange: state.getIn(['sheet', 'isSelectingRange']),
   selectedRangeCoors: state.getIn(['sheet', 'selectedRangeCoors']),
+  isInsertingFormulaCellRef: state.getIn(['sheet', 'isInsertingFormulaCellRef']),
+  insertionRangeCoors: state.getIn(['sheet', 'insertionRangeCoors']),
 });
 
 const mapDispatchToProps = {
@@ -56,7 +60,9 @@ const mapDispatchToProps = {
   stopEditing,
   clearCellRange,
   setEditingCellCaretPos,
-  insertCellRefIntoEditValue,
+  startInsertingFormulaCellRef,
+  stopInsertingFormulaCellRef,
+  updateInsertedCellRef,
   setSelectedCell,
   moveSelectedCellUp,
   moveSelectedCellDown,

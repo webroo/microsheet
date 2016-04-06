@@ -4,11 +4,12 @@ import {createReducer} from '../utils/reduxUtils';
 import {
   computeSheet,
   coerceStringToNumber,
-  getCellAddrFromCoor,
+  getAddrFromCoor,
   capitalizeExpression,
   isFormula,
   rangeSize,
   expandCoorRange,
+  getAddrRangeFromCoorRange,
 } from '../utils/sheetUtils';
 
 // The `raw` property is the underlying user input, and `val` is the evaluated (displayed) output.
@@ -27,6 +28,11 @@ const initialState = Immutable.fromJS({
   isEditingValueDirty: false,
   isQuickEditing: false,
 
+  isInsertingFormulaCellRef: false,
+  insertionRangeCoors: [[null, null], [null, null]],
+  inserteeValue: '',
+  inserteePos: 0,
+
   isCellSelected: false,
   selectedCellCoor: [null, null],
 
@@ -41,7 +47,10 @@ export const SET_EDIT_VALUE = 'SET_EDIT_VALUE';
 export const STOP_EDITING = 'STOP_EDITING';
 export const CLEAR_CELL_RANGE = 'CLEAR_CELL_RANGE';
 export const SET_EDITING_CELL_CARET_POS = 'SET_EDITING_CELL_CARET_POS';
-export const INSERT_CELL_REF_INTO_EDIT_VALUE = 'INSERT_CELL_REF_INTO_EDIT_VALUE';
+
+export const START_INSERTING_FORMULA_CELL_REF = 'START_INSERTING_FORMULA_CELL_REF';
+export const STOP_INSERTING_FORMULA_CELL_REF = 'STOP_INSERTING_FORMULA_CELL_REF';
+export const UPDATE_INSERTED_CELL_REF = 'UPDATE_INSERTED_CELL_REF';
 
 export const SET_SELECTED_CELL = 'SET_SELECTED_CELL';
 export const MOVE_SELECTED_CELL_UP = 'MOVE_SELECTED_CELL_UP';
@@ -88,9 +97,18 @@ export const setEditingCellCaretPos = pos => ({
   pos,
 });
 
-export const insertCellRefIntoEditValue = coor => ({
-  type: INSERT_CELL_REF_INTO_EDIT_VALUE,
-  coor,
+export const startInsertingFormulaCellRef = startCoor => ({
+  type: START_INSERTING_FORMULA_CELL_REF,
+  startCoor,
+});
+
+export const stopInsertingFormulaCellRef = () => ({
+  type: STOP_INSERTING_FORMULA_CELL_REF,
+});
+
+export const updateInsertedCellRef = range => ({
+  type: UPDATE_INSERTED_CELL_REF,
+  range,
 });
 
 export const setSelectedCell = coor => ({
@@ -205,12 +223,36 @@ const actionHandlers = {
       .set('isEditingValueDirty', true);
   },
 
-  INSERT_CELL_REF_INTO_EDIT_VALUE(state, action) {
-    const caretPos = state.get('editingCellCaretPos');
-    const cellAddr = getCellAddrFromCoor(action.coor);
-    const editingValue = state.get('editingCellValue');
+  START_INSERTING_FORMULA_CELL_REF(state, action) {
+    return state
+      .set('isInsertingFormulaCellRef', true)
+      .set('insertionRangeCoors', Immutable.fromJS([action.startCoor, action.startCoor]))
+      .set('inserteeValue', state.get('editingCellValue'))
+      .set('inserteePos', state.get('editingCellCaretPos'));
+  },
+
+  UPDATE_INSERTED_CELL_REF(state, action) {
+    const caretPos = state.get('inserteePos');
+    let cellAddr;
+    if (rangeSize(action.range) === 1) {
+      cellAddr = getAddrFromCoor(action.range[0]);
+    } else {
+      cellAddr = getAddrRangeFromCoorRange(action.range);
+    }
+    const editingValue = state.get('inserteeValue');
     const newValue = editingValue.substring(0, caretPos) + cellAddr + editingValue.substring(caretPos);
-    return state.set('editingCellValue', newValue);
+
+    return state
+      .set('editingCellValue', newValue)
+      .set('insertionRangeCoors', Immutable.fromJS(action.range));
+  },
+
+  STOP_INSERTING_FORMULA_CELL_REF(state) {
+    return state
+      .set('insertionRangeCoors', Immutable.fromJS([[null, null], [null, null]]))
+      .set('isInsertingFormulaCellRef', false)
+      .set('inserteeValue', '')
+      .set('inserteePos', 0);
   },
 
   SET_SELECTED_CELL(state, action) {

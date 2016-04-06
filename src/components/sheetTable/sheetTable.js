@@ -29,6 +29,8 @@ class SheetTable extends React.Component {
   onDocumentMouseUp() {
     if (this.props.isSelectingRange) {
       this.props.stopSelectingRange();
+    } else if (this.props.isInsertingFormulaCellRef) {
+      this.props.stopInsertingFormulaCellRef();
     }
   }
 
@@ -50,7 +52,11 @@ class SheetTable extends React.Component {
       stopEditing,
       clearCellRange,
       setEditingCellCaretPos,
-      insertCellRefIntoEditValue,
+      startInsertingFormulaCellRef,
+      stopInsertingFormulaCellRef,
+      updateInsertedCellRef,
+      isInsertingFormulaCellRef,
+      insertionRangeCoors,
       setSelectedCell,
       moveSelectedCellUp,
       moveSelectedCellDown,
@@ -213,12 +219,14 @@ class SheetTable extends React.Component {
                           :
                           <div
                             onMouseDown={event => {
-                              if (isEditingCell &&
+                              if (
+                                isEditingCell &&
                                 isFormula(editingCellValue) &&
                                 isValidFormulaSymbol(editingCellValue.charAt(editingCellCaretPos - 1))
                               ) {
                                 event.preventDefault();
-                                insertCellRefIntoEditValue(cellCoor);
+                                startInsertingFormulaCellRef();
+                                updateInsertedCellRef([cellCoor, cellCoor]);
                               } else {
                                 setSelectedCell(cellCoor);
                                 startSelectingRange();
@@ -227,11 +235,15 @@ class SheetTable extends React.Component {
                             onMouseUp={() => {
                               if (isSelectingRange) {
                                 stopSelectingRange();
+                              } else if (isInsertingFormulaCellRef) {
+                                stopInsertingFormulaCellRef();
                               }
                             }}
                             onMouseOver={() => {
                               if (isSelectingRange) {
                                 setSelectedRange([selectedCellCoor.toJS(), cellCoor]);
+                              } else if (isInsertingFormulaCellRef) {
+                                updateInsertedCellRef([insertionRangeCoors.get(0).toJS(), cellCoor]);
                               }
                             }}
                             onDoubleClick={() => {
@@ -265,6 +277,8 @@ SheetTable.propTypes = {
   editingCellCaretPos: PropTypes.number,
   isEditingValueDirty: PropTypes.bool,
   isCellSelected: PropTypes.bool,
+  isInsertingFormulaCellRef: PropTypes.bool,
+  insertionRangeCoors: PropTypes.instanceOf(Immutable.List).isRequired,
   selectedCellCoor: PropTypes.instanceOf(Immutable.List).isRequired,
   setCellValue: PropTypes.func.isRequired,
   setEditValue: PropTypes.func.isRequired,
@@ -272,7 +286,9 @@ SheetTable.propTypes = {
   stopEditing: PropTypes.func.isRequired,
   clearCellRange: PropTypes.func.isRequired,
   setEditingCellCaretPos: PropTypes.func.isRequired,
-  insertCellRefIntoEditValue: PropTypes.func.isRequired,
+  startInsertingFormulaCellRef: PropTypes.func.isRequired,
+  stopInsertingFormulaCellRef: PropTypes.func.isRequired,
+  updateInsertedCellRef: PropTypes.func.isRequired,
   setSelectedCell: PropTypes.func.isRequired,
   moveSelectedCellUp: PropTypes.func.isRequired,
   moveSelectedCellDown: PropTypes.func.isRequired,
