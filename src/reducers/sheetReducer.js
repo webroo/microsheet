@@ -7,8 +7,8 @@ import {
   getCellAddrFromCoor,
   capitalizeExpression,
   isFormula,
-  positivizeRange,
   rangeSize,
+  expandCoorRange,
 } from '../utils/sheetUtils';
 
 // The `raw` property is the underlying user input, and `val` is the evaluated (displayed) output.
@@ -191,13 +191,10 @@ const actionHandlers = {
   },
 
   CLEAR_CELL_RANGE(state, action) {
-    const range = positivizeRange(action.range);
     let data = state.get('data');
-    for (let rowIndex = range[0][0]; rowIndex <= range[1][0]; rowIndex++) {
-      for (let cellIndex = range[0][1]; cellIndex <= range[1][1]; cellIndex++) {
-        data = data.setIn([rowIndex, cellIndex, 'raw'], '');
-      }
-    }
+    expandCoorRange(action.range).forEach(coor => {
+      data = data.setIn([...coor, 'raw'], '');
+    });
     data = computeSheet(data);
     return state.set('data', data);
   },
