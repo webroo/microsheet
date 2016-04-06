@@ -8,6 +8,7 @@ import {
   isCoorInRange,
   isFormula,
   isValidFormulaSymbol,
+  positivizeRange,
 } from '../../utils/sheetUtils';
 import {classNames} from '../../utils/reactUtils';
 
@@ -61,6 +62,10 @@ class SheetTable extends React.Component {
       setSelectedRange,
       startSelectingRange,
       stopSelectingRange,
+      moveRangeEndUp,
+      moveRangeEndDown,
+      moveRangeEndLeft,
+      moveRangeEndRight,
     } = this.props;
 
     return (
@@ -82,14 +87,35 @@ class SheetTable extends React.Component {
               clearCellRange([selectedCellCoor.toJS(), selectedCellCoor.toJS()]);
             }
           } else if (event.key === 'ArrowUp') {
-            moveSelectedCellUp();
+            if (event.shiftKey) {
+              moveRangeEndUp();
+            } else {
+              moveSelectedCellUp();
+            }
           } else if (event.key === 'ArrowDown') {
-            moveSelectedCellDown();
+            if (event.shiftKey) {
+              moveRangeEndDown();
+            } else {
+              moveSelectedCellDown();
+            }
           } else if (event.key === 'ArrowLeft') {
-            moveSelectedCellLeft();
+            if (event.shiftKey) {
+              moveRangeEndLeft();
+            } else {
+              moveSelectedCellLeft();
+            }
           } else if (event.key === 'ArrowRight') {
-            moveSelectedCellRight();
-          } else {
+            if (event.shiftKey) {
+              moveRangeEndRight();
+            } else {
+              moveSelectedCellRight();
+            }
+          } else if (
+            event.key !== 'Control' &&
+            event.key !== 'Alt' &&
+            event.key !== 'Shift' &&
+            !event.metaKey
+          ) {
             startEditingCell(selectedCellCoor.toJS(), true);
           }
         }}
@@ -117,7 +143,7 @@ class SheetTable extends React.Component {
                     const cellCoor = [rowIndex, cellIndex];
                     const isSelected = isMatchingCoors(cellCoor, selectedCellCoor.toJS());
                     const isEditing = isMatchingCoors(cellCoor, editingCellCoor.toJS());
-                    const isInRange = isRangeSelected && isCoorInRange(cellCoor, selectedRangeCoors.toJS());
+                    const isInRange = isRangeSelected && isCoorInRange(cellCoor, positivizeRange(selectedRangeCoors.toJS()));
                     const cssClass = classNames({
                       [styles.selected]: isSelected,
                       [styles.editing]: isEditing,
@@ -258,6 +284,10 @@ SheetTable.propTypes = {
   setSelectedRange: PropTypes.func.isRequired,
   startSelectingRange: PropTypes.func.isRequired,
   stopSelectingRange: PropTypes.func.isRequired,
+  moveRangeEndUp: PropTypes.func.isRequired,
+  moveRangeEndDown: PropTypes.func.isRequired,
+  moveRangeEndLeft: PropTypes.func.isRequired,
+  moveRangeEndRight: PropTypes.func.isRequired,
 };
 
 export default SheetTable;

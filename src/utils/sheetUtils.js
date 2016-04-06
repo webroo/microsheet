@@ -20,6 +20,12 @@ export const positivizeRange = range => ([
   [Math.max(range[0][0], range[1][0]), Math.max(range[0][1], range[1][1])],
 ]);
 
+export const rangeSize = range => {
+  const pRange = positivizeRange(range);
+  return (pRange[1][0] - pRange[0][0] + 1) * // Row size
+         (pRange[1][1] - pRange[0][1] + 1);  // Col size
+};
+
 export const isFormula = value => typeof value === 'string' && value.charAt(0) === '=';
 
 export const isValidFormulaSymbol = char => {

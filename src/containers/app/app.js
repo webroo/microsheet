@@ -17,6 +17,10 @@ import {
   setSelectedRange,
   startSelectingRange,
   stopSelectingRange,
+  moveRangeEndUp,
+  moveRangeEndDown,
+  moveRangeEndLeft,
+  moveRangeEndRight,
 } from '../../reducers/sheetReducer';
 
 import {rowHeaderSelector, colHeaderSelector} from '../../selectors/sheetSelector';
@@ -61,6 +65,10 @@ const mapDispatchToProps = {
   setSelectedRange,
   startSelectingRange,
   stopSelectingRange,
+  moveRangeEndUp,
+  moveRangeEndDown,
+  moveRangeEndLeft,
+  moveRangeEndRight,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

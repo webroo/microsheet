@@ -8,6 +8,7 @@ import {
   capitalizeCellAddresses,
   isFormula,
   positivizeRange,
+  rangeSize,
 } from '../utils/sheetUtils';
 
 // The `raw` property is the underlying user input, and `val` is the evaluated (displayed) output.
@@ -51,6 +52,10 @@ export const MOVE_SELECTED_CELL_RIGHT = 'MOVE_SELECTED_CELL_RIGHT';
 export const START_SELECTING_RANGE = 'START_SELECTING_RANGE';
 export const STOP_SELECTING_RANGE = 'STOP_SELECTING_RANGE';
 export const SET_SELECTED_RANGE = 'SET_SELECTED_RANGE';
+export const MOVE_RANGE_END_UP = 'MOVE_RANGE_END_UP';
+export const MOVE_RANGE_END_DOWN = 'MOVE_RANGE_END_DOWN';
+export const MOVE_RANGE_END_LEFT = 'MOVE_RANGE_END_LEFT';
+export const MOVE_RANGE_END_RIGHT = 'MOVE_RANGE_END_RIGHT';
 
 export const setCellValue = (coor, value) => ({
   type: SET_CELL_VALUE,
@@ -122,6 +127,22 @@ export const stopSelectingRange = () => ({
   type: STOP_SELECTING_RANGE,
 });
 
+export const moveRangeEndUp = () => ({
+  type: MOVE_RANGE_END_UP,
+});
+
+export const moveRangeEndDown = () => ({
+  type: MOVE_RANGE_END_DOWN,
+});
+
+export const moveRangeEndLeft = () => ({
+  type: MOVE_RANGE_END_LEFT,
+});
+
+export const moveRangeEndRight = () => ({
+  type: MOVE_RANGE_END_RIGHT,
+});
+
 function clearRangeSelection(state) {
   return state
     .set('isRangeSelected', false)
@@ -170,9 +191,10 @@ const actionHandlers = {
   },
 
   CLEAR_CELL_RANGE(state, action) {
+    const range = positivizeRange(action.range);
     let data = state.get('data');
-    for (let rowIndex = action.range[0][0]; rowIndex <= action.range[1][0]; rowIndex++) {
-      for (let cellIndex = action.range[0][1]; cellIndex <= action.range[1][1]; cellIndex++) {
+    for (let rowIndex = range[0][0]; rowIndex <= range[1][0]; rowIndex++) {
+      for (let cellIndex = range[0][1]; cellIndex <= range[1][1]; cellIndex++) {
         data = data.setIn([rowIndex, cellIndex, 'raw'], '');
       }
     }
@@ -197,33 +219,35 @@ const actionHandlers = {
   SET_SELECTED_CELL(state, action) {
     return clearRangeSelection(state)
       .set('isCellSelected', true)
-      .set('selectedCellCoor', new Immutable.List(action.coor));
+      .set('selectedCellCoor', new Immutable.List(action.coor))
+      .set('isRangeSelected', false)
+      .set('selectedRangeCoors', Immutable.fromJS([action.coor, action.coor]));
   },
 
   MOVE_SELECTED_CELL_UP(state) {
     let coor = state.get('selectedCellCoor');
     coor = coor.set(0, Math.max(0, coor.get(0) - 1));
-    return actionHandlers.SET_SELECTED_CELL(state, {coor});
+    return actionHandlers.SET_SELECTED_CELL(state, {coor: coor.toJS()});
   },
 
   MOVE_SELECTED_CELL_DOWN(state) {
     const maxRows = state.get('data').size - 1;
     let coor = state.get('selectedCellCoor');
     coor = coor.set(0, Math.min(maxRows, coor.get(0) + 1));
-    return actionHandlers.SET_SELECTED_CELL(state, {coor});
+    return actionHandlers.SET_SELECTED_CELL(state, {coor: coor.toJS()});
   },
 
   MOVE_SELECTED_CELL_LEFT(state) {
     let coor = state.get('selectedCellCoor');
     coor = coor.set(1, Math.max(0, coor.get(1) - 1));
-    return actionHandlers.SET_SELECTED_CELL(state, {coor});
+    return actionHandlers.SET_SELECTED_CELL(state, {coor: coor.toJS()});
   },
 
   MOVE_SELECTED_CELL_RIGHT(state) {
     const maxCols = state.getIn(['data', 0]).size - 1;
     let coor = state.get('selectedCellCoor');
     coor = coor.set(1, Math.min(maxCols, coor.get(1) + 1));
-    return actionHandlers.SET_SELECTED_CELL(state, {coor});
+    return actionHandlers.SET_SELECTED_CELL(state, {coor: coor.toJS()});
   },
 
   START_SELECTING_RANGE(state) {
@@ -235,10 +259,39 @@ const actionHandlers = {
   },
 
   SET_SELECTED_RANGE(state, action) {
-    const positiveRange = positivizeRange(action.range);
     return state
-      .set('isRangeSelected', true)
-      .set('selectedRangeCoors', Immutable.fromJS(positiveRange));
+      .set('isRangeSelected', rangeSize(action.range) > 1)
+      .set('selectedRangeCoors', Immutable.fromJS(action.range));
+  },
+
+  MOVE_RANGE_END_UP(state) {
+    let endCoor = state.getIn(['selectedRangeCoors', 1]);
+    endCoor = endCoor.set(0, Math.max(0, endCoor.get(0) - 1));
+    const newRange = state.get('selectedRangeCoors').set(1, endCoor);
+    return actionHandlers.SET_SELECTED_RANGE(state, {range: newRange.toJS()});
+  },
+
+  MOVE_RANGE_END_DOWN(state) {
+    const maxRows = state.get('data').size - 1;
+    let endCoor = state.getIn(['selectedRangeCoors', 1]);
+    endCoor = endCoor.set(0, Math.min(maxRows, endCoor.get(0) + 1));
+    const newRange = state.get('selectedRangeCoors').set(1, endCoor);
+    return actionHandlers.SET_SELECTED_RANGE(state, {range: newRange.toJS()});
+  },
+
+  MOVE_RANGE_END_LEFT(state) {
+    let endCoor = state.getIn(['selectedRangeCoors', 1]);
+    endCoor = endCoor.set(1, Math.max(0, endCoor.get(1) - 1));
+    const newRange = state.get('selectedRangeCoors').set(1, endCoor);
+    return actionHandlers.SET_SELECTED_RANGE(state, {range: newRange.toJS()});
+  },
+
+  MOVE_RANGE_END_RIGHT(state) {
+    const maxCols = state.getIn(['data', 0]).size - 1;
+    let endCoor = state.getIn(['selectedRangeCoors', 1]);
+    endCoor = endCoor.set(1, Math.min(maxCols, endCoor.get(1) + 1));
+    const newRange = state.get('selectedRangeCoors').set(1, endCoor);
+    return actionHandlers.SET_SELECTED_RANGE(state, {range: newRange.toJS()});
   },
 };
 
