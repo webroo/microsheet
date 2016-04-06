@@ -29,19 +29,23 @@ export const rangeSize = range => {
 export const isFormula = value => typeof value === 'string' && value.charAt(0) === '=';
 
 export const isValidFormulaSymbol = char => {
-  return /[+\-*/()=]/.test(char);
+  return /[+\-*/()=,]/.test(char);
 };
 
-export const capitalizeCellAddresses = expr => (
-  // Only capitalizes sequences with one lowercase letter and 1 or 2 numbers, eg: a1 or a11
-  expr.replace(/([a-z]\d{1,2})/g, match => match.toUpperCase())
+export const capitalizeExpression = expr => (
+  // Only capitalize formula function names and cell addresses (eg: a1, b22, etc)
+  expr.replace(/sum|average|[a-z]\d{1,2}/gi, match => match.toUpperCase())
 );
 
-export const sanitizeExpression = expr => (
-  // The first regex removes anything that isn't a valid operator symbol or uppercase A-Z character
-  // The second removes any sequence of A-Z chars of 2 or greater (a cell address can only have one letter)
-  expr.replace(/[^+\-*/().:\dA-Z]/g, '').replace(/[A-Z]{2,}/g, '')
-);
+export const sanitizeExpression = expr => {
+  return expr
+    // Remove anything that isn't a valid formula symbol or uppercase A-Z character. All valid
+    // formula function names and cell address will have already been capitalized.
+    .replace(/[^+\-*/().,:\dA-Z]/g, '')
+    // Remove any sequence of A-Z chars of 2 or greater, unless it's a valid formula function name.
+    // (Remember, a cell address can only have one letter)
+    .replace(/[A-Z]{2,}/g, v => (['SUM', 'AVERAGE'].includes(v) ? v : ''));
+};
 
 export const computeSheet = sheet => {
   // Reduces the nested Immutable List down to an object map where the keys are cell addresses.
@@ -53,6 +57,10 @@ export const computeSheet = sheet => {
       return acc;
     }, acc)
   ), {});
+
+  // Add formula functions to the object, which will be called automatically when eval-ing
+  cellMap.SUM = (...values) => values.reduce((a, v) => a + v, 0);
+  cellMap.AVERAGE = (...values) => values.reduce((a, v) => a + v, 0) / values.length;
 
   /* eslint-disable no-new-func */
   const evalFunc = new Function('object', 'expression', 'with (object) {return eval(expression)}');

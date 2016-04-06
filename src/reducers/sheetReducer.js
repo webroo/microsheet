@@ -5,7 +5,7 @@ import {
   computeSheet,
   coerceStringToNumber,
   getCellAddrFromCoor,
-  capitalizeCellAddresses,
+  capitalizeExpression,
   isFormula,
   positivizeRange,
   rangeSize,
@@ -156,7 +156,7 @@ const actionHandlers = {
     let data = state.get('data');
 
     if (isFormula(value)) {
-      value = capitalizeCellAddresses(action.value);
+      value = capitalizeExpression(action.value);
     } else {
       value = coerceStringToNumber(action.value);
     }
