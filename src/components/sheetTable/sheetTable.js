@@ -4,6 +4,7 @@ import Immutable from 'immutable';
 import React, {PropTypes} from 'react';
 
 import {
+  isNumber,
   isMatchingCoors,
   isCoorInRange,
   isFormula,
@@ -154,107 +155,110 @@ class SheetTable extends React.Component {
                       [styles.selected]: isSelected,
                       [styles.editing]: isEditing,
                       [styles.rangeSelected]: isInRange,
+                      [styles.number]: isNumber(cell.get('val')),
                     });
 
                     return (
-                      <td key={cellIndex} className={cssClass}>
-                        {
-                          isEditing ?
-                            <input
-                              type="text"
-                              value={editingCellValue}
-                              onChange={event => {
-                                setEditValue(event.target.value);
-                              }}
-                              onSelect={event => {
-                                setEditingCellCaretPos(event.target.selectionStart);
-                              }}
-                              onBlur={() => {
+                      isEditing ?
+                        <td key={cellIndex} className={cssClass}>
+                          <input
+                            type="text"
+                            className={classNames({
+                              [styles.number]: isNumber(cell.get('val')),
+                            })}
+                            value={editingCellValue}
+                            onChange={event => {
+                              setEditValue(event.target.value);
+                            }}
+                            onSelect={event => {
+                              setEditingCellCaretPos(event.target.selectionStart);
+                            }}
+                            onBlur={() => {
+                              setCellValue(cellCoor, editingCellValue);
+                              // stopEditing();
+                            }}
+                            onKeyDown={event => {
+                              event.stopPropagation();
+                              if (event.key === 'Enter') {
                                 setCellValue(cellCoor, editingCellValue);
                                 stopEditing();
-                              }}
-                              onKeyDown={event => {
-                                event.stopPropagation();
-                                if (event.key === 'Enter') {
+                                moveSelectedCellDown();
+                              } else if (event.key === 'Escape') {
+                                event.preventDefault();
+                                stopEditing();
+                              } else if (event.key === 'Tab') {
+                                event.preventDefault();
+                                setCellValue(cellCoor, editingCellValue);
+                                stopEditing();
+                                moveSelectedCellRight();
+                              }
+
+                              if (isQuickEditing) {
+                                if (event.key === 'ArrowUp') {
+                                  setCellValue(cellCoor, editingCellValue);
+                                  stopEditing();
+                                  moveSelectedCellUp();
+                                } else if (event.key === 'ArrowDown') {
                                   setCellValue(cellCoor, editingCellValue);
                                   stopEditing();
                                   moveSelectedCellDown();
-                                } else if (event.key === 'Escape') {
-                                  event.preventDefault();
+                                } else if (event.key === 'ArrowLeft') {
+                                  setCellValue(cellCoor, editingCellValue);
                                   stopEditing();
-                                } else if (event.key === 'Tab') {
-                                  event.preventDefault();
+                                  moveSelectedCellLeft();
+                                } else if (event.key === 'ArrowRight') {
                                   setCellValue(cellCoor, editingCellValue);
                                   stopEditing();
                                   moveSelectedCellRight();
                                 }
-
-                                if (isQuickEditing) {
-                                  if (event.key === 'ArrowUp') {
-                                    setCellValue(cellCoor, editingCellValue);
-                                    stopEditing();
-                                    moveSelectedCellUp();
-                                  } else if (event.key === 'ArrowDown') {
-                                    setCellValue(cellCoor, editingCellValue);
-                                    stopEditing();
-                                    moveSelectedCellDown();
-                                  } else if (event.key === 'ArrowLeft') {
-                                    setCellValue(cellCoor, editingCellValue);
-                                    stopEditing();
-                                    moveSelectedCellLeft();
-                                  } else if (event.key === 'ArrowRight') {
-                                    setCellValue(cellCoor, editingCellValue);
-                                    stopEditing();
-                                    moveSelectedCellRight();
-                                  }
-                                }
-                              }}
-                              ref={input => {
-                                if (input && !isEditingValueDirty) {
-                                  input.focus();
-                                  input.select();
-                                }
-                              }}
-                            />
-                          :
-                          <div
-                            className={styles.cellContent}
-                            onMouseDown={event => {
-                              if (
-                                isEditingCell &&
-                                isFormula(editingCellValue) &&
-                                isValidFormulaSymbol(editingCellValue.charAt(editingCellCaretPos - 1))
-                              ) {
-                                event.preventDefault();
-                                startInsertingFormulaCellRef();
-                                updateInsertedCellRef([cellCoor, cellCoor]);
-                              } else {
-                                setSelectedCell(cellCoor);
-                                startSelectingRange();
                               }
                             }}
-                            onMouseUp={() => {
-                              if (isSelectingRange) {
-                                stopSelectingRange();
-                              } else if (isInsertingFormulaCellRef) {
-                                stopInsertingFormulaCellRef();
+                            ref={input => {
+                              if (input && !isEditingValueDirty) {
+                                input.focus();
+                                input.select();
                               }
                             }}
-                            onMouseOver={() => {
-                              if (isSelectingRange) {
-                                setSelectedRange([selectedCellCoor.toJS(), cellCoor]);
-                              } else if (isInsertingFormulaCellRef) {
-                                updateInsertedCellRef([insertionRangeCoors.get(0).toJS(), cellCoor]);
-                              }
-                            }}
-                            onDoubleClick={() => {
-                              startEditingCell(cellCoor);
-                            }}
-                          >
-                            {cell.get('val')}
-                          </div>
-                        }
-                      </td>
+                          />
+                        </td>
+                        :
+                        <td
+                          key={cellIndex}
+                          className={cssClass}
+                          onMouseDown={event => {
+                            if (
+                              isEditingCell &&
+                              isFormula(editingCellValue) &&
+                              isValidFormulaSymbol(editingCellValue.charAt(editingCellCaretPos - 1))
+                            ) {
+                              event.preventDefault();
+                              startInsertingFormulaCellRef();
+                              updateInsertedCellRef([cellCoor, cellCoor]);
+                            } else {
+                              setSelectedCell(cellCoor);
+                              startSelectingRange();
+                            }
+                          }}
+                          onMouseUp={() => {
+                            if (isSelectingRange) {
+                              stopSelectingRange();
+                            } else if (isInsertingFormulaCellRef) {
+                              stopInsertingFormulaCellRef();
+                            }
+                          }}
+                          onMouseOver={() => {
+                            if (isSelectingRange) {
+                              setSelectedRange([selectedCellCoor.toJS(), cellCoor]);
+                            } else if (isInsertingFormulaCellRef) {
+                              updateInsertedCellRef([insertionRangeCoors.get(0).toJS(), cellCoor]);
+                            }
+                          }}
+                          onDoubleClick={() => {
+                            startEditingCell(cellCoor);
+                          }}
+                        >
+                          {cell.get('val')}
+                        </td>
                     );
                   })
                 }
