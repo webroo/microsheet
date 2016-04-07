@@ -218,6 +218,7 @@ class SheetTable extends React.Component {
                             />
                           :
                           <div
+                            className={styles.cellContent}
                             onMouseDown={event => {
                               if (
                                 isEditingCell &&

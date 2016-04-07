@@ -1,7 +1,10 @@
 .sheetTable {
+  border: 4px solid rgba(255,255,255,0.35);
   border-collapse: collapse;
+  color: #222;
   cursor: default;
   display: inline-block; /* fixes edge case bug with user-select rule */
+  font-size: 15px;
   outline: none;
 
   -webkit-touch-callout: none;
@@ -11,13 +14,15 @@
   user-select: none;
 
   & th, & td {
-    border: 1px solid #CCC;
-    font-weight: normal;
+    border: 1px solid #ABD1DD;
     padding: 0;
   }
 
   & th {
-    background-color: #EEE;
+    background-color: transparent;
+    color: white;
+    font-weight: bold;
+    height: 26px;
 
     &:first-child {
       width: 25px;
@@ -25,25 +30,29 @@
   }
 
   & td {
+    background-color: #FFF;
     position: relative;
     text-align: right;
-    width: 100px;
-    height: 20px;
 
-    & div {
-      width: 100%;
-      height: 100%;
+    & .cellContent {
+      display: table-cell;
+      height: 26px;
+      padding: 2px;
+      vertical-align: middle;
+      width: 100px;
     }
 
     & input {
       border: 0;
       cursor: text;
-      padding: 0;
-      width: 100%;
+      height: 26px;
+      outline: none;
+      padding: 2px;
+      width: 100px;
     }
 
     &.selected::before {
-      border: 2px solid #4285F4;
+      border: 2px solid #FFA151;
       bottom: -1px;
       content: "";
       left: -1px;
@@ -51,10 +60,15 @@
       position: absolute;
       right: -1px;
       top: -1px;
+      z-index: 1;
+    }
+
+    &.editing.selected::before {
+      box-shadow: 0px 0px 2px 2px rgba(255, 161, 81, 0.4);
     }
 
     &.rangeSelected {
-      background-color: #ECF3FF;
+      background-color: #FEF8E0;
     }
 
     &.editing {}

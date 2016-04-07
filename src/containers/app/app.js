@@ -1,3 +1,5 @@
+import styles from './app.css';
+
 import {connect} from 'react-redux';
 import React from 'react';
 
@@ -30,7 +32,10 @@ import SheetTable from '../../components/sheetTable/sheetTable';
 
 const App = props => {
   return (
-    <SheetTable {...props} />
+    <div className={styles.container}>
+      <h1 className={styles.title}>microsheet</h1>
+      <SheetTable {...props} />
+    </div>
   );
 };
 
