@@ -10,15 +10,20 @@ import {
   rangeSize,
   expandCoorRange,
   getAddrRangeFromCoorRange,
+  autofillSheet,
 } from '../utils/sheetUtils';
 
 // The `raw` property is the underlying user input, and `val` is the evaluated (displayed) output.
 // `val` is always a string as it's just a displayable value in the UI
 const initialState = Immutable.fromJS({
   data: [
-    [{raw: 1, val: '1'}, {raw: 2, val: '2'}, {raw: 3, val: '3'}],
-    [{raw: 4, val: '4'}, {raw: 5, val: '5'}, {raw: 6, val: '6'}],
-    [{raw: 7, val: '7'}, {raw: 8, val: '8'}, {raw: 9, val: '9'}],
+    [{raw: 1, val: '1'}, {raw: 2, val: '2'}, {raw: 0, val: '3'}],
+    [{raw: 4, val: '4'}, {raw: 5, val: '5'}, {raw: 0, val: '6'}],
+    [{raw: 7, val: '7'}, {raw: 8, val: '8'}, {raw: 0, val: '9'}],
+    [{raw: 1, val: '1'}, {raw: 2, val: '2'}, {raw: '=A4+B4', val: '3'}],
+    [{raw: 4, val: '4'}, {raw: 5, val: '5'}, {raw: 0, val: '6'}],
+    [{raw: 7, val: '7'}, {raw: 8, val: '8'}, {raw: 0, val: '9'}],
+    [{raw: 7, val: '7'}, {raw: 8, val: '8'}, {raw: 0, val: '9'}],
     [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
     [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
     [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
@@ -46,6 +51,9 @@ const initialState = Immutable.fromJS({
   isRangeSelected: false,
   isSelectingRange: false,
   selectedRangeCoors: [[null, null], [null, null]],
+
+  isSelectingAutofillRange: false,
+  autofillRangeCoors: [[null, null], [null, null]],
 });
 
 export const SET_CELL_VALUE = 'SET_CELL_VALUE';
@@ -73,99 +81,57 @@ export const MOVE_RANGE_END_DOWN = 'MOVE_RANGE_END_DOWN';
 export const MOVE_RANGE_END_LEFT = 'MOVE_RANGE_END_LEFT';
 export const MOVE_RANGE_END_RIGHT = 'MOVE_RANGE_END_RIGHT';
 
-export const setCellValue = (coor, value) => ({
-  type: SET_CELL_VALUE,
+export const START_SELECTING_AUTOFILL_RANGE = 'START_SELECTING_AUTOFILL_RANGE';
+export const STOP_SELECTING_AUTOFILL_RANGE = 'STOP_SELECTING_AUTOFILL_RANGE';
+export const SET_SELECTED_AUTOFILL_RANGE = 'SET_SELECTED_AUTOFILL_RANGE';
+
+export const setCellValue = (coor, value) => ({type: SET_CELL_VALUE,
   coor,
   value,
 });
-
-export const setEditValue = value => ({
-  type: SET_EDIT_VALUE,
+export const setEditValue = value => ({type: SET_EDIT_VALUE,
   value,
 });
-
-export const startEditingCell = (coor, isQuick) => ({
-  type: START_EDITING_CELL,
+export const startEditingCell = (coor, isQuick) => ({type: START_EDITING_CELL,
   coor,
   isQuick,
 });
-
-export const stopEditing = () => ({
-  type: STOP_EDITING,
-});
-
-export const clearCellRange = range => ({
-  type: CLEAR_CELL_RANGE,
+export const stopEditing = () => ({type: STOP_EDITING});
+export const clearCellRange = range => ({type: CLEAR_CELL_RANGE,
   range,
 });
-
-export const setEditingCellCaretPos = pos => ({
-  type: SET_EDITING_CELL_CARET_POS,
+export const setEditingCellCaretPos = pos => ({type: SET_EDITING_CELL_CARET_POS,
   pos,
 });
 
-export const startInsertingFormulaCellRef = startCoor => ({
-  type: START_INSERTING_FORMULA_CELL_REF,
-  startCoor,
-});
-
-export const stopInsertingFormulaCellRef = () => ({
-  type: STOP_INSERTING_FORMULA_CELL_REF,
-});
-
-export const updateInsertedCellRef = range => ({
-  type: UPDATE_INSERTED_CELL_REF,
+export const startInsertingFormulaCellRef = () => ({type: START_INSERTING_FORMULA_CELL_REF});
+export const stopInsertingFormulaCellRef = () => ({type: STOP_INSERTING_FORMULA_CELL_REF});
+export const updateInsertedCellRef = range => ({type: UPDATE_INSERTED_CELL_REF,
   range,
 });
 
-export const setSelectedCell = coor => ({
-  type: SET_SELECTED_CELL,
+export const setSelectedCell = coor => ({type: SET_SELECTED_CELL,
   coor,
 });
+export const moveSelectedCellUp = () => ({type: MOVE_SELECTED_CELL_UP});
+export const moveSelectedCellDown = () => ({type: MOVE_SELECTED_CELL_DOWN});
+export const moveSelectedCellLeft = () => ({type: MOVE_SELECTED_CELL_LEFT});
+export const moveSelectedCellRight = () => ({type: MOVE_SELECTED_CELL_RIGHT});
 
-export const moveSelectedCellUp = () => ({
-  type: MOVE_SELECTED_CELL_UP,
-});
-
-export const moveSelectedCellDown = () => ({
-  type: MOVE_SELECTED_CELL_DOWN,
-});
-
-export const moveSelectedCellLeft = () => ({
-  type: MOVE_SELECTED_CELL_LEFT,
-});
-
-export const moveSelectedCellRight = () => ({
-  type: MOVE_SELECTED_CELL_RIGHT,
-});
-
-export const setSelectedRange = range => ({
-  type: SET_SELECTED_RANGE,
+export const startSelectingRange = () => ({type: START_SELECTING_RANGE});
+export const stopSelectingRange = () => ({type: STOP_SELECTING_RANGE});
+export const setSelectedRange = range => ({type: SET_SELECTED_RANGE,
   range,
 });
+export const moveRangeEndUp = () => ({type: MOVE_RANGE_END_UP});
+export const moveRangeEndDown = () => ({type: MOVE_RANGE_END_DOWN});
+export const moveRangeEndLeft = () => ({type: MOVE_RANGE_END_LEFT});
+export const moveRangeEndRight = () => ({type: MOVE_RANGE_END_RIGHT});
 
-export const startSelectingRange = () => ({
-  type: START_SELECTING_RANGE,
-});
-
-export const stopSelectingRange = () => ({
-  type: STOP_SELECTING_RANGE,
-});
-
-export const moveRangeEndUp = () => ({
-  type: MOVE_RANGE_END_UP,
-});
-
-export const moveRangeEndDown = () => ({
-  type: MOVE_RANGE_END_DOWN,
-});
-
-export const moveRangeEndLeft = () => ({
-  type: MOVE_RANGE_END_LEFT,
-});
-
-export const moveRangeEndRight = () => ({
-  type: MOVE_RANGE_END_RIGHT,
+export const startSelectingAutofillRange = () => ({type: START_SELECTING_AUTOFILL_RANGE});
+export const stopSelectingAutofillRange = () => ({type: STOP_SELECTING_AUTOFILL_RANGE});
+export const setSelectedAutofillRange = range => ({type: SET_SELECTED_AUTOFILL_RANGE,
+  range,
 });
 
 function clearRangeSelection(state) {
@@ -230,10 +196,9 @@ const actionHandlers = {
       .set('isEditingValueDirty', true);
   },
 
-  START_INSERTING_FORMULA_CELL_REF(state, action) {
+  START_INSERTING_FORMULA_CELL_REF(state) {
     return state
       .set('isInsertingFormulaCellRef', true)
-      .set('insertionRangeCoors', Immutable.fromJS([action.startCoor, action.startCoor]))
       .set('inserteeValue', state.get('editingCellValue'))
       .set('inserteePos', state.get('editingCellCaretPos'));
   },
@@ -267,6 +232,8 @@ const actionHandlers = {
       .set('isCellSelected', true)
       .set('selectedCellCoor', new Immutable.List(action.coor))
       .set('isRangeSelected', false)
+      .set('isInsertingFormulaCellRef', false)
+      .set('isSelectingAutofillRange', false)
       .set('selectedRangeCoors', Immutable.fromJS([action.coor, action.coor]));
   },
 
@@ -338,6 +305,42 @@ const actionHandlers = {
     endCoor = endCoor.set(1, Math.min(maxCols, endCoor.get(1) + 1));
     const newRange = state.get('selectedRangeCoors').set(1, endCoor);
     return actionHandlers.SET_SELECTED_RANGE(state, {range: newRange.toJS()});
+  },
+
+  START_SELECTING_AUTOFILL_RANGE(state) {
+    return state.set('isSelectingAutofillRange', true);
+  },
+
+  STOP_SELECTING_AUTOFILL_RANGE(state) {
+    let data = state.get('data');
+    data = autofillSheet(data, state.get('autofillRangeCoors').toJS());
+    data = computeSheet(data);
+    return state
+      .set('data', data)
+      .set('isSelectingAutofillRange', false)
+      .set('autofillRangeCoors', Immutable.fromJS([[null, null], [null, null]]));
+  },
+
+  SET_SELECTED_AUTOFILL_RANGE(state, action) {
+    const range = action.range;
+    const rangeMagnitude = [
+      Math.abs(range[0][0] - range[1][0]),
+      Math.abs(range[0][1] - range[1][1]),
+    ];
+
+    if (rangeMagnitude[1] > rangeMagnitude[0]) {
+      range[1] = [
+        range[0][0],
+        range[1][1],
+      ];
+    } else {
+      range[1] = [
+        range[1][0],
+        range[0][1],
+      ];
+    }
+
+    return state.set('autofillRangeCoors', Immutable.fromJS(range));
   },
 };
 

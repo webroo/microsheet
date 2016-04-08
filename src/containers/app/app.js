@@ -25,6 +25,9 @@ import {
   moveRangeEndDown,
   moveRangeEndLeft,
   moveRangeEndRight,
+  startSelectingAutofillRange,
+  stopSelectingAutofillRange,
+  setSelectedAutofillRange,
 } from '../../reducers/sheetReducer';
 
 import {rowHeaderSelector, colHeaderSelector} from '../../selectors/sheetSelector';
@@ -56,6 +59,8 @@ const mapStateToProps = state => ({
   selectedRangeCoors: state.getIn(['sheet', 'selectedRangeCoors']),
   isInsertingFormulaCellRef: state.getIn(['sheet', 'isInsertingFormulaCellRef']),
   insertionRangeCoors: state.getIn(['sheet', 'insertionRangeCoors']),
+  isSelectingAutofillRange: state.getIn(['sheet', 'isSelectingAutofillRange']),
+  autofillRangeCoors: state.getIn(['sheet', 'autofillRangeCoors']),
 });
 
 const mapDispatchToProps = {
@@ -80,6 +85,9 @@ const mapDispatchToProps = {
   moveRangeEndDown,
   moveRangeEndLeft,
   moveRangeEndRight,
+  startSelectingAutofillRange,
+  stopSelectingAutofillRange,
+  setSelectedAutofillRange,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

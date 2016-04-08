@@ -32,6 +32,8 @@ class SheetTable extends React.Component {
       this.props.stopSelectingRange();
     } else if (this.props.isInsertingFormulaCellRef) {
       this.props.stopInsertingFormulaCellRef();
+    } else if (this.props.isSelectingAutofillRange) {
+      this.props.stopSelectingAutofillRange();
     }
   }
 
@@ -73,6 +75,11 @@ class SheetTable extends React.Component {
       moveRangeEndDown,
       moveRangeEndLeft,
       moveRangeEndRight,
+      isSelectingAutofillRange,
+      autofillRangeCoors,
+      startSelectingAutofillRange,
+      stopSelectingAutofillRange,
+      setSelectedAutofillRange,
     } = this.props;
 
     return (
@@ -151,11 +158,13 @@ class SheetTable extends React.Component {
                     const isSelected = isMatchingCoors(cellCoor, selectedCellCoor.toJS());
                     const isEditing = isMatchingCoors(cellCoor, editingCellCoor.toJS());
                     const isInRange = isRangeSelected && isCoorInRange(cellCoor, positivizeRange(selectedRangeCoors.toJS()));
+                    const isAutofilling = isSelectingAutofillRange && isCoorInRange(cellCoor, positivizeRange(autofillRangeCoors.toJS()));
                     const cssClass = classNames({
                       [styles.selected]: isSelected,
                       [styles.editing]: isEditing,
                       [styles.rangeSelected]: isInRange,
                       [styles.number]: isNumber(cell.get('val')),
+                      [styles.autofillSelected]: isAutofilling,
                     });
 
                     return (
@@ -175,7 +184,7 @@ class SheetTable extends React.Component {
                             }}
                             onBlur={() => {
                               setCellValue(cellCoor, editingCellValue);
-                              // stopEditing();
+                              stopEditing();
                             }}
                             onKeyDown={event => {
                               event.stopPropagation();
@@ -251,6 +260,8 @@ class SheetTable extends React.Component {
                               setSelectedRange([selectedCellCoor.toJS(), cellCoor]);
                             } else if (isInsertingFormulaCellRef) {
                               updateInsertedCellRef([insertionRangeCoors.get(0).toJS(), cellCoor]);
+                            } else if (isSelectingAutofillRange) {
+                              setSelectedAutofillRange([autofillRangeCoors.get(0).toJS(), cellCoor]);
                             }
                           }}
                           onDoubleClick={() => {
@@ -258,6 +269,18 @@ class SheetTable extends React.Component {
                           }}
                         >
                           {cell.get('val')}
+                          <div
+                            className={styles.autofillHandle}
+                            onMouseDown={event => {
+                              event.stopPropagation();
+                              startSelectingAutofillRange();
+                              setSelectedAutofillRange([cellCoor, cellCoor]);
+                            }}
+                            onMouseUp={event => {
+                              event.stopPropagation();
+                              stopSelectingAutofillRange();
+                            }}
+                          ></div>
                         </td>
                     );
                   })
@@ -309,6 +332,11 @@ SheetTable.propTypes = {
   moveRangeEndDown: PropTypes.func.isRequired,
   moveRangeEndLeft: PropTypes.func.isRequired,
   moveRangeEndRight: PropTypes.func.isRequired,
+  isSelectingAutofillRange: PropTypes.bool.isRequired,
+  autofillRangeCoors: PropTypes.instanceOf(Immutable.List).isRequired,
+  startSelectingAutofillRange: PropTypes.func.isRequired,
+  stopSelectingAutofillRange: PropTypes.func.isRequired,
+  setSelectedAutofillRange: PropTypes.func.isRequired,
 };
 
 export default SheetTable;

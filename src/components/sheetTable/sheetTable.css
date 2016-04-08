@@ -33,7 +33,7 @@
 
   & td {
     background-color: #FFF;
-    padding: 2px;
+    padding: 2px 3px;
     position: relative;
     text-align: left;
     vertical-align: middle;
@@ -60,6 +60,23 @@
     }
 
     &.rangeSelected {
+      background-color: #FEF8E0;
+    }
+
+    &.selected .autofillHandle {
+      background-color: #FFA151;
+      border: 1px solid white;
+      bottom: -4px;
+      content: "";
+      cursor: crosshair;
+      height: 8px;
+      position: absolute;
+      right: -4px;
+      width: 8px;
+      z-index: 2;
+    }
+
+    &.autofillSelected {
       background-color: #FEF8E0;
     }
 

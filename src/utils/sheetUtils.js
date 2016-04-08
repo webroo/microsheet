@@ -48,6 +48,7 @@ export const rangeSize = range => {
 };
 
 // Expands a coor range into an array of all the coors contained in the range
+// eg: [[0,0],[1,1]] --> [[0,0],[0,1],[1,0],[1,1]]
 export const expandCoorRange = range => {
   const pRange = positivizeRange(range);
   const expandedRange = [];
@@ -59,7 +60,8 @@ export const expandCoorRange = range => {
   return expandedRange;
 };
 
-// Expands a compact address range (A1:C3) into a comma separated string of all the addresses
+// Expands an address range into a comma separated string of all the addresses
+// eg: A1:B2 --> A1,B1,A2,B2
 export const expandAddrRange = addrRange => {
   const coorRange = getCoorRangeFromAddrRange(addrRange);
   const expandedRange = expandCoorRange(coorRange).map(coor => getAddrFromCoor(coor));
@@ -141,6 +143,37 @@ export const computeSheet = sheet => {
       return cell.set('val', computedVal.toString());
     });
   });
+
+  return newSheet;
+};
+
+export const autofillSheet = (sheet, range) => {
+  const originCoor = range[0];
+  const originValue = sheet.getIn([...range[0], 'raw']);
+  const pRange = positivizeRange(range);
+  let newSheet = sheet;
+
+  for (let rowIndex = pRange[0][0]; rowIndex <= pRange[1][0]; rowIndex++) {
+    for (let cellIndex = pRange[0][1]; cellIndex <= pRange[1][1]; cellIndex++) {
+      const offset = [
+        rowIndex - originCoor[0],
+        cellIndex - originCoor[1],
+      ];
+
+      let newValue;
+      if (isFormula(originValue)) {
+        newValue = originValue.replace(/([A-Z])(\d{1,2})/g, (match, colAddr, rowAddr) => {
+          const newColAddr = ALPHABET[ALPHABET.indexOf(colAddr) + offset[1]];
+          const newRowAddr = (parseInt(rowAddr) + offset[0]);
+          return newColAddr + newRowAddr;
+        });
+      } else {
+        newValue = originValue;
+      }
+
+      newSheet = newSheet.setIn([rowIndex, cellIndex, 'raw'], newValue);
+    }
+  }
 
   return newSheet;
 };
