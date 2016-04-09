@@ -139,6 +139,7 @@ function clearRangeSelection(state) {
 
 const actionHandlers = {
   SET_CELL_VALUE(state, action) {
+    // TODO: ensure this also handles number values
     let value = action.value.trim();
     let data = state.get('data');
 

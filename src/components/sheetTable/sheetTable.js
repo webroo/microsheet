@@ -194,6 +194,7 @@ class SheetTable extends React.Component {
                             type="text"
                             className={classNames({
                               [styles.number]: isNumber(cell.get('val')),
+                              [styles.formula]: isFormula(cell.get('raw')),
                             })}
                             value={editingCellValue}
                             onChange={event => {
@@ -202,14 +203,14 @@ class SheetTable extends React.Component {
                             onSelect={event => {
                               setEditingCellCaretPos(event.target.selectionStart);
                             }}
-                            onBlur={() => {
-                              setCellValue(cellCoor, editingCellValue);
+                            onBlur={event => {
+                              setCellValue(cellCoor, event.target.value);
                               stopEditing();
                             }}
                             onKeyDown={event => {
                               event.stopPropagation();
                               if (event.key === 'Enter') {
-                                setCellValue(cellCoor, editingCellValue);
+                                setCellValue(cellCoor, event.target.value);
                                 stopEditing();
                                 moveSelectedCellDown();
                               } else if (event.key === 'Escape') {
@@ -217,26 +218,26 @@ class SheetTable extends React.Component {
                                 stopEditing();
                               } else if (event.key === 'Tab') {
                                 event.preventDefault();
-                                setCellValue(cellCoor, editingCellValue);
+                                setCellValue(cellCoor, event.target.value);
                                 stopEditing();
                                 moveSelectedCellRight();
                               }
 
                               if (isQuickEditing) {
                                 if (event.key === 'ArrowUp') {
-                                  setCellValue(cellCoor, editingCellValue);
+                                  setCellValue(cellCoor, event.target.value);
                                   stopEditing();
                                   moveSelectedCellUp();
                                 } else if (event.key === 'ArrowDown') {
-                                  setCellValue(cellCoor, editingCellValue);
+                                  setCellValue(cellCoor, event.target.value);
                                   stopEditing();
                                   moveSelectedCellDown();
                                 } else if (event.key === 'ArrowLeft') {
-                                  setCellValue(cellCoor, editingCellValue);
+                                  setCellValue(cellCoor, event.target.value);
                                   stopEditing();
                                   moveSelectedCellLeft();
                                 } else if (event.key === 'ArrowRight') {
-                                  setCellValue(cellCoor, editingCellValue);
+                                  setCellValue(cellCoor, event.target.value);
                                   stopEditing();
                                   moveSelectedCellRight();
                                 }
@@ -245,7 +246,13 @@ class SheetTable extends React.Component {
                             ref={input => {
                               if (input && !isEditingValueDirty) {
                                 input.focus();
-                                input.select();
+                                if (isQuickEditing) {
+                                  // Select all the text
+                                  input.select();
+                                } else {
+                                  // Put the caret at the end of the text
+                                  input.setSelectionRange(input.value.length, input.value.length);
+                                }
                               }
                             }}
                           />
