@@ -120,7 +120,10 @@ export const computeSheet = sheet => {
       get: () => {
         const cellVal = cellMap[cellKey];
         // Only eval cell contents that start with '=', which denotes a formula expression
-        if (typeof cellVal === 'string' && cellVal.charAt(0) === '=') {
+        if (isFormula(cellVal)) {
+          if (cellVal.length === 1) {
+            throw new Error('Empty formula');
+          }
           // Remove the starting '=' symbol and sanitize the expression before we evaluate it
           const expr = sanitizeExpression(cellVal.substring(1));
           return evalFunc(cellMap, expr);

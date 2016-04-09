@@ -139,13 +139,13 @@ function clearRangeSelection(state) {
 
 const actionHandlers = {
   SET_CELL_VALUE(state, action) {
-    let value = action.value;
+    let value = action.value.trim();
     let data = state.get('data');
 
     if (isFormula(value)) {
-      value = capitalizeExpression(action.value);
+      value = capitalizeExpression(value);
     } else {
-      value = coerceStringToNumber(action.value);
+      value = coerceStringToNumber(value);
     }
 
     data = data.setIn([...action.coor, 'raw'], value);
