@@ -109,8 +109,10 @@ export const computeSheet = sheet => {
   cellMap.AVERAGE = (...values) => values.reduce((a, v) => a + v, 0) / values.length;
 
   /* eslint-disable no-new-func */
-  const evalFunc = new Function('object', 'expression', 'with (object) {return eval(expression)}');
+  const evalFunc = new Function('obj', 'expr', 'with (obj) {return eval(expr)}');
   /* eslint-enable no-new-func */
+
+  let isComputingFormula = false;
 
   // Create getters for each cell address on the map (without the underscore prefix). The getters
   // will eval the contents of the cell if it's an expression (ie. begins with a '='). This allows
@@ -119,15 +121,32 @@ export const computeSheet = sheet => {
     Object.defineProperty(cellMap, cellKey.substring(1), {
       get: () => {
         const cellVal = cellMap[cellKey];
-        // Only eval cell contents that start with '=', which denotes a formula expression
+
         if (isFormula(cellVal)) {
           if (cellVal.length === 1) {
             throw new Error('Empty formula');
           }
           // Remove the starting '=' symbol and sanitize the expression before we evaluate it
           const expr = sanitizeExpression(cellVal.substring(1));
-          return evalFunc(cellMap, expr);
+
+          // Keep track of when we're computing a formula - see comment further down for more info
+          isComputingFormula = true;
+          const newCellVal = evalFunc(cellMap, expr);
+          isComputingFormula = false;
+
+          if (typeof newCellVal === 'undefined') {
+            throw new Error('Bad formula');
+          }
+
+          return newCellVal;
         }
+
+        // We keep track of when we're computing a formula so that we can ignore string values
+        // and return 0 instead, this allows empty cells to be ignored when summing ranges.
+        if (isComputingFormula && typeof cellVal === 'string') {
+          return 0;
+        }
+
         return cellVal;
       },
     });
@@ -137,12 +156,16 @@ export const computeSheet = sheet => {
   const newSheet = sheet.map((row, rowIndex) => {
     return row.map((cell, cellIndex) => {
       let computedVal;
+
       try {
         computedVal = cellMap[getAddrFromCoor([rowIndex, cellIndex])];
       } catch (error) {
-        // Circular references in forumlas will throw a stack overflow error from the getters
+        // Circular references in forumlas will throw a stack overflow error from the recursive getters
         computedVal = '#ERROR!';
+        // The error will have been thrown while computing a formula, so we must reset the flag
+        isComputingFormula = false;
       }
+
       return cell.set('val', computedVal.toString());
     });
   });
