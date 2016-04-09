@@ -52,7 +52,7 @@
       position: absolute;
       right: -1px;
       top: -1px;
-      z-index: 1;
+      z-index: 2;
     }
 
     &.editing.selected::before {
@@ -61,6 +61,104 @@
 
     &.rangeSelected {
       background-color: #FEF8E0;
+
+      &::after {
+        border-style: solid;
+        border-width: 0;
+        border-color: #FFA151;
+        bottom: -1px;
+        content: "";
+        left: -1px;
+        pointer-events: none;
+        position: absolute;
+        right: -1px;
+        top: -1px;
+        z-index: 1;
+      }
+
+      &.topEdge::after {
+        border-top-width: 1px;
+      }
+
+      &.bottomEdge::after {
+        border-bottom-width: 1px;
+      }
+
+      &.leftEdge::after {
+        border-left-width: 1px;
+      }
+
+      &.rightEdge::after {
+        border-right-width: 1px;
+      }
+    }
+
+    &.autofillSelected {
+      /*background-color: #FEF8E0;*/
+
+      &::after {
+        border-style: dotted;
+        border-width: 0;
+        border-color: #FFA151;
+        bottom: -1px;
+        content: "";
+        left: -1px;
+        pointer-events: none;
+        position: absolute;
+        right: -1px;
+        top: -1px;
+        z-index: 1;
+      }
+
+      &.topEdge::after {
+        border-top-width: 2px;
+      }
+
+      &.bottomEdge::after {
+        border-bottom-width: 2px;
+      }
+
+      &.leftEdge::after {
+        border-left-width: 2px;
+      }
+
+      &.rightEdge::after {
+        border-right-width: 2px;
+      }
+    }
+
+    &.insertionSelected {
+      background-color: #FEF8E0;
+
+      &::after {
+        border-style: dotted;
+        border-width: 0;
+        border-color: #FFA151;
+        bottom: -1px;
+        content: "";
+        left: -1px;
+        pointer-events: none;
+        position: absolute;
+        right: -1px;
+        top: -1px;
+        z-index: 1;
+      }
+
+      &.topEdge::after {
+        border-top-width: 2px;
+      }
+
+      &.bottomEdge::after {
+        border-bottom-width: 2px;
+      }
+
+      &.leftEdge::after {
+        border-left-width: 2px;
+      }
+
+      &.rightEdge::after {
+        border-right-width: 2px;
+      }
     }
 
     &.selected .autofillHandle {
@@ -73,11 +171,7 @@
       position: absolute;
       right: -4px;
       width: 8px;
-      z-index: 2;
-    }
-
-    &.autofillSelected {
-      background-color: #FEF8E0;
+      z-index: 3;
     }
 
     & input {

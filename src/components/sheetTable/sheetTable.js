@@ -10,6 +10,10 @@ import {
   isFormula,
   isValidFormulaSymbol,
   positivizeRange,
+  isTopEdgeOfRange,
+  isBottomEdgeOfRange,
+  isLeftEdgeOfRange,
+  isRightEdgeOfRange,
 } from '../../utils/sheetUtils';
 import {classNames} from '../../utils/reactUtils';
 
@@ -158,13 +162,29 @@ class SheetTable extends React.Component {
                     const isSelected = isMatchingCoors(cellCoor, selectedCellCoor.toJS());
                     const isEditing = isMatchingCoors(cellCoor, editingCellCoor.toJS());
                     const isInRange = isRangeSelected && isCoorInRange(cellCoor, positivizeRange(selectedRangeCoors.toJS()));
+                    const isInsertingFormulaRange = isInsertingFormulaCellRef && isCoorInRange(cellCoor, positivizeRange(insertionRangeCoors.toJS()));
                     const isAutofilling = isSelectingAutofillRange && isCoorInRange(cellCoor, positivizeRange(autofillRangeCoors.toJS()));
+
+                    let currentSelectionRange;
+                    if (isInsertingFormulaCellRef) {
+                      currentSelectionRange = positivizeRange(insertionRangeCoors.toJS());
+                    } else if (isSelectingAutofillRange) {
+                      currentSelectionRange = positivizeRange(autofillRangeCoors.toJS());
+                    } else {
+                      currentSelectionRange = positivizeRange(selectedRangeCoors.toJS());
+                    }
+
                     const cssClass = classNames({
                       [styles.selected]: isSelected,
                       [styles.editing]: isEditing,
                       [styles.rangeSelected]: isInRange,
                       [styles.number]: isNumber(cell.get('val')),
+                      [styles.insertionSelected]: isInsertingFormulaRange,
                       [styles.autofillSelected]: isAutofilling,
+                      [styles.topEdge]: isTopEdgeOfRange(currentSelectionRange, cellCoor),
+                      [styles.bottomEdge]: isBottomEdgeOfRange(currentSelectionRange, cellCoor),
+                      [styles.leftEdge]: isLeftEdgeOfRange(currentSelectionRange, cellCoor),
+                      [styles.rightEdge]: isRightEdgeOfRange(currentSelectionRange, cellCoor),
                     });
 
                     return (
@@ -268,19 +288,24 @@ class SheetTable extends React.Component {
                             startEditingCell(cellCoor);
                           }}
                         >
-                          {cell.get('val')}
-                          <div
-                            className={styles.autofillHandle}
-                            onMouseDown={event => {
-                              event.stopPropagation();
-                              startSelectingAutofillRange();
-                              setSelectedAutofillRange([cellCoor, cellCoor]);
-                            }}
-                            onMouseUp={event => {
-                              event.stopPropagation();
-                              stopSelectingAutofillRange();
-                            }}
-                          ></div>
+                          <span>{cell.get('val')}</span>
+                          {
+                            !isRangeSelected && isSelected ?
+                              <div
+                                className={styles.autofillHandle}
+                                onMouseDown={event => {
+                                  event.stopPropagation();
+                                  startSelectingAutofillRange();
+                                  setSelectedAutofillRange([cellCoor, cellCoor]);
+                                }}
+                                onMouseUp={event => {
+                                  event.stopPropagation();
+                                  stopSelectingAutofillRange();
+                                }}
+                              ></div>
+                            :
+                              null
+                          }
                         </td>
                     );
                   })

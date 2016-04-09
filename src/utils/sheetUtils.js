@@ -177,3 +177,19 @@ export const autofillSheet = (sheet, range) => {
 
   return newSheet;
 };
+
+export const isTopEdgeOfRange = (rangeCoors, coor) => (
+  coor[0] === rangeCoors[0][0]
+);
+
+export const isBottomEdgeOfRange = (rangeCoors, coor) => (
+  coor[0] === rangeCoors[1][0]
+);
+
+export const isLeftEdgeOfRange = (rangeCoors, coor) => (
+  coor[1] === rangeCoors[0][1]
+);
+
+export const isRightEdgeOfRange = (rangeCoors, coor) => (
+  coor[1] === rangeCoors[1][1]
+);

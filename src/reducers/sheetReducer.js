@@ -17,13 +17,9 @@ import {
 // `val` is always a string as it's just a displayable value in the UI
 const initialState = Immutable.fromJS({
   data: [
-    [{raw: 1, val: '1'}, {raw: 2, val: '2'}, {raw: 0, val: '3'}],
-    [{raw: 4, val: '4'}, {raw: 5, val: '5'}, {raw: 0, val: '6'}],
-    [{raw: 7, val: '7'}, {raw: 8, val: '8'}, {raw: 0, val: '9'}],
-    [{raw: 1, val: '1'}, {raw: 2, val: '2'}, {raw: '=A4+B4', val: '3'}],
-    [{raw: 4, val: '4'}, {raw: 5, val: '5'}, {raw: 0, val: '6'}],
-    [{raw: 7, val: '7'}, {raw: 8, val: '8'}, {raw: 0, val: '9'}],
-    [{raw: 7, val: '7'}, {raw: 8, val: '8'}, {raw: 0, val: '9'}],
+    [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+    [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+    [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
     [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
     [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
     [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
