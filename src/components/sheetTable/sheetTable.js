@@ -3,22 +3,8 @@ import styles from './sheetTable.css';
 import Immutable from 'immutable';
 import React, {PropTypes} from 'react';
 
-import {
-  isNumber,
-  isMatchingCoors,
-  isCoorInRange,
-  isFormula,
-  isValidFormulaSymbol,
-  positivizeRange,
-  isTopEdgeOfRange,
-  isBottomEdgeOfRange,
-  isLeftEdgeOfRange,
-  isRightEdgeOfRange,
-  translateCoor,
-  translateRange,
-  rangeSize,
-} from '../../utils/sheetUtils';
-import {classNames} from '../../utils/reactUtils';
+import {translateCoor, translateRange} from '../../utils/sheetUtils';
+import SheetCell from './sheetCell';
 
 class SheetTable extends React.Component {
   constructor(props) {
@@ -116,6 +102,7 @@ class SheetTable extends React.Component {
             event.key !== 'Control' &&
             event.key !== 'Alt' &&
             event.key !== 'Shift' &&
+            event.key !== 'Escape' &&
             !event.metaKey
           ) {
             startEditingCell('quick', primarySelectedCoor.toJS());
@@ -141,157 +128,32 @@ class SheetTable extends React.Component {
               <tr key={rowIndex}>
                 <th scope="row">{colHeaderData.get(rowIndex)}</th>
                 {
-                  row.map((cell, cellIndex) => {
-                    const cellCoor = [rowIndex, cellIndex];
-                    const isSelected = isMatchingCoors(cellCoor, primarySelectedCoor.toJS());
-                    const isEditing = isMatchingCoors(cellCoor, editingCellCoor.toJS());
-                    const isInRange = isCoorInRange(cellCoor, positivizeRange(selectedRangeCoors.toJS()));
-                    const isAutofilling = selectedRangeMode === 'autofill' && isInRange;
-                    const isInsertingFormulaRange = selectedRangeMode === 'formula' && isInRange;
+                  row.map((cellData, cellIndex) => (
+                    <SheetCell
+                      key={cellIndex}
+                      cellData={cellData}
+                      cellCoor={[rowIndex, cellIndex]}
+                      primarySelectedCoor={primarySelectedCoor}
+                      selectedRangeCoors={selectedRangeCoors}
+                      selectedRangeMode={selectedRangeMode}
+                      isSelectingRange={isSelectingRange}
+                      editingCellCoor={editingCellCoor}
+                      editingCellValue={editingCellValue}
+                      editMode={editMode}
+                      isEditingValueDirty={isEditingValueDirty}
+                      editingCellCaretPos={editingCellCaretPos}
 
-                    const currentSelectionRange = positivizeRange(selectedRangeCoors.toJS());
-
-                    const cssClass = classNames({
-                      [styles.selected]: isSelected,
-                      [styles.editing]: isEditing,
-                      [styles.rangeSelected]: isInRange && rangeSize(selectedRangeCoors.toJS()) > 1,
-                      [styles.number]: isNumber(cell.get('val')),
-                      [styles.insertionSelected]: isInsertingFormulaRange,
-                      [styles.autofillSelected]: isAutofilling,
-                      [styles.topEdge]: isTopEdgeOfRange(currentSelectionRange, cellCoor),
-                      [styles.bottomEdge]: isBottomEdgeOfRange(currentSelectionRange, cellCoor),
-                      [styles.leftEdge]: isLeftEdgeOfRange(currentSelectionRange, cellCoor),
-                      [styles.rightEdge]: isRightEdgeOfRange(currentSelectionRange, cellCoor),
-                    });
-
-                    return (
-                      isEditing ?
-                        <td key={cellIndex} className={cssClass}>
-                          <input
-                            type="text"
-                            className={classNames({
-                              [styles.number]: isNumber(cell.get('val')),
-                              [styles.formula]: isFormula(cell.get('raw')),
-                            })}
-                            value={editingCellValue}
-                            onChange={event => {
-                              setEditValue(event.target.value);
-                            }}
-                            onSelect={event => {
-                              setEditingCellCaretPos(event.target.selectionStart);
-                            }}
-                            onBlur={event => {
-                              setCellValue(cellCoor, event.target.value);
-                              stopEditing();
-                            }}
-                            onKeyDown={event => {
-                              event.stopPropagation();
-                              if (event.key === 'Enter') {
-                                setCellValue(cellCoor, event.target.value);
-                                stopEditing();
-                                if (event.shiftKey) {
-                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [-1, 0]));
-                                } else {
-                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [1, 0]));
-                                }
-                              } else if (event.key === 'Escape') {
-                                event.preventDefault();
-                                stopEditing();
-                              } else if (event.key === 'Tab') {
-                                event.preventDefault();
-                                setCellValue(cellCoor, event.target.value);
-                                stopEditing();
-                                setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, 1]));
-                              }
-
-                              if (editMode === 'quick') {
-                                if (event.key === 'ArrowUp') {
-                                  setCellValue(cellCoor, event.target.value);
-                                  stopEditing();
-                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [-1, 0]));
-                                } else if (event.key === 'ArrowDown') {
-                                  setCellValue(cellCoor, event.target.value);
-                                  stopEditing();
-                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [1, 0]));
-                                } else if (event.key === 'ArrowLeft') {
-                                  setCellValue(cellCoor, event.target.value);
-                                  stopEditing();
-                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, -1]));
-                                } else if (event.key === 'ArrowRight') {
-                                  setCellValue(cellCoor, event.target.value);
-                                  stopEditing();
-                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, 1]));
-                                }
-                              }
-                            }}
-                            ref={input => {
-                              if (input && !isEditingValueDirty) {
-                                input.focus();
-                                if (editMode === 'quick') {
-                                  // Select all the text
-                                  input.select();
-                                } else {
-                                  // Put the caret at the end of the text
-                                  input.setSelectionRange(input.value.length, input.value.length);
-                                }
-                              }
-                            }}
-                          />
-                        </td>
-                        :
-                        <td
-                          key={cellIndex}
-                          className={cssClass}
-                          onMouseDown={event => {
-                            if (
-                              editMode !== 'none' &&
-                              isFormula(editingCellValue) &&
-                              isValidFormulaSymbol(editingCellValue.charAt(editingCellCaretPos - 1))
-                            ) {
-                              event.preventDefault();
-                              startSelectingRange('formula');
-                              setSelectedRange('formula', [cellCoor, cellCoor]);
-                            } else if (event.shiftKey) {
-                              setSelectedRange(selectedRangeMode, [selectedRangeCoors.toJS()[0], cellCoor]);
-                            } else {
-                              setPrimarySelectedCoor(cellCoor);
-                              startSelectingRange('basic');
-                            }
-                          }}
-                          onMouseUp={() => {
-                            if (isSelectingRange) {
-                              stopSelectingRange();
-                            }
-                          }}
-                          onMouseOver={() => {
-                            if (isSelectingRange) {
-                              setSelectedRange(selectedRangeMode, [selectedRangeCoors.toJS()[0], cellCoor]);
-                            }
-                          }}
-                          onDoubleClick={() => {
-                            startEditingCell(cellCoor);
-                          }}
-                        >
-                          <span>{cell.get('val')}</span>
-                          {
-                            isSelected && rangeSize(selectedRangeCoors.toJS()) === 1 ?
-                              <div
-                                className={styles.autofillHandle}
-                                onMouseDown={event => {
-                                  event.stopPropagation();
-                                  startSelectingRange('autofill');
-                                }}
-                                onMouseUp={event => {
-                                  event.stopPropagation();
-                                  stopSelectingRange();
-                                }}
-                              ></div>
-                            :
-                              null
-                          }
-                        </td>
-                    );
-                  })
+                      setEditValue={setEditValue}
+                      setEditingCellCaretPos={setEditingCellCaretPos}
+                      setCellValue={setCellValue}
+                      stopEditing={stopEditing}
+                      setPrimarySelectedCoor={setPrimarySelectedCoor}
+                      startSelectingRange={startSelectingRange}
+                      setSelectedRange={setSelectedRange}
+                      stopSelectingRange={stopSelectingRange}
+                      startEditingCell={startEditingCell}
+                    />
+                  ))
                 }
               </tr>
             ))

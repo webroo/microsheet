@@ -239,18 +239,18 @@ export const autofillSheet = (sheet, range) => {
   return newSheet;
 };
 
-export const isTopEdgeOfRange = (rangeCoors, coor) => (
-  coor[0] === rangeCoors[0][0]
+export const isTopEdgeOfRange = (range, coor) => (
+  isCoorInRange(coor, range) && coor[0] === range[0][0]
 );
 
-export const isBottomEdgeOfRange = (rangeCoors, coor) => (
-  coor[0] === rangeCoors[1][0]
+export const isBottomEdgeOfRange = (range, coor) => (
+  isCoorInRange(coor, range) && coor[0] === range[1][0]
 );
 
-export const isLeftEdgeOfRange = (rangeCoors, coor) => (
-  coor[1] === rangeCoors[0][1]
+export const isLeftEdgeOfRange = (range, coor) => (
+  isCoorInRange(coor, range) && coor[1] === range[0][1]
 );
 
-export const isRightEdgeOfRange = (rangeCoors, coor) => (
-  coor[1] === rangeCoors[1][1]
+export const isRightEdgeOfRange = (range, coor) => (
+  isCoorInRange(coor, range) && coor[1] === range[1][1]
 );
