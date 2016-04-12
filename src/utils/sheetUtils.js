@@ -4,13 +4,25 @@ export const isNumber = n => !isNaN(parseFloat(n)) && isFinite(n);
 
 export const coerceStringToNumber = n => (isNumber(n) ? parseFloat(n) : n);
 
+export const createEmptyCoor = () => [undefined, undefined];
+
+export const createEmptyCoorRange = () => [[undefined, undefined], [undefined, undefined]];
+
+export const isValidCoor = coor => (
+  coor[0] !== undefined && coor[1] !== undefined
+);
+
+export const isValidCoorRange = range => (
+  isValidCoor(range[0]) && isValidCoor(range[1])
+);
+
 // The row address value is one-based, whereas the coordinate is zero-based
 export const getAddrFromCoor = coor => `${ALPHABET[coor[1]]}${coor[0] + 1}`;
 
 export const getCoorFromAddr = addr => {
   // The row address value is one-based, whereas the coordinate is zero-based
   const rowIndex = parseInt(addr.substring(1)) - 1;
-  const cellIndex = ALPHABET.indexOf(addr.charAt(0)) > -1 ? ALPHABET.indexOf(addr.charAt(0)) : null;
+  const cellIndex = ALPHABET.indexOf(addr.charAt(0)) > -1 ? ALPHABET.indexOf(addr.charAt(0)) : undefined;
   return [rowIndex, cellIndex];
 };
 
@@ -46,6 +58,29 @@ export const rangeSize = range => {
   return (pRange[1][0] - pRange[0][0] + 1) * // Row size
          (pRange[1][1] - pRange[0][1] + 1);  // Col size
 };
+
+export const translateCoor = (coorA, coorB) => (
+  [coorA[0] + coorB[0], coorA[1] + coorB[1]]
+);
+
+export const translateRange = (rangeA, rangeB) => (
+  [translateCoor(rangeA[0], rangeB[0]), translateCoor(rangeA[1], rangeB[1])]
+);
+
+export const clampCoorToRange = (coor, range) => {
+  const pRange = positivizeRange(range);
+  return [
+    Math.min(Math.max(coor[0], pRange[0][0]), pRange[1][0]),
+    Math.min(Math.max(coor[1], pRange[0][1]), pRange[1][1]),
+  ];
+};
+
+export const clampRangeToRange = (rangeA, rangeB) => (
+  [
+    clampCoorToRange(rangeA[0], rangeB),
+    clampCoorToRange(rangeA[1], rangeB),
+  ]
+);
 
 // Expands a coor range into an array of all the coors contained in the range
 // eg: [[0,0],[1,1]] --> [[0,0],[0,1],[1,0],[1,1]]

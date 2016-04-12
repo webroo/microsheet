@@ -14,6 +14,9 @@ import {
   isBottomEdgeOfRange,
   isLeftEdgeOfRange,
   isRightEdgeOfRange,
+  translateCoor,
+  translateRange,
+  rangeSize,
 } from '../../utils/sheetUtils';
 import {classNames} from '../../utils/reactUtils';
 
@@ -34,10 +37,6 @@ class SheetTable extends React.Component {
   onDocumentMouseUp() {
     if (this.props.isSelectingRange) {
       this.props.stopSelectingRange();
-    } else if (this.props.isInsertingFormulaCellRef) {
-      this.props.stopInsertingFormulaCellRef();
-    } else if (this.props.isSelectingAutofillRange) {
-      this.props.stopSelectingAutofillRange();
     }
   }
 
@@ -46,44 +45,25 @@ class SheetTable extends React.Component {
       sheetData,
       rowHeaderData,
       colHeaderData,
-      isEditingCell,
-      isQuickEditing,
+      selectedRangeMode,
+      editMode,
       editingCellCoor,
       editingCellValue,
       editingCellCaretPos,
       isEditingValueDirty,
-      selectedCellCoor,
+      primarySelectedCoor,
       setCellValue,
       setEditValue,
       startEditingCell,
       stopEditing,
-      clearCellRange,
+      deleteRange,
       setEditingCellCaretPos,
-      startInsertingFormulaCellRef,
-      stopInsertingFormulaCellRef,
-      updateInsertedCellRef,
-      isInsertingFormulaCellRef,
-      insertionRangeCoors,
-      setSelectedCell,
-      moveSelectedCellUp,
-      moveSelectedCellDown,
-      moveSelectedCellLeft,
-      moveSelectedCellRight,
+      setPrimarySelectedCoor,
       selectedRangeCoors,
-      isRangeSelected,
       isSelectingRange,
       setSelectedRange,
       startSelectingRange,
       stopSelectingRange,
-      moveRangeEndUp,
-      moveRangeEndDown,
-      moveRangeEndLeft,
-      moveRangeEndRight,
-      isSelectingAutofillRange,
-      autofillRangeCoors,
-      startSelectingAutofillRange,
-      stopSelectingAutofillRange,
-      setSelectedAutofillRange,
     } = this.props;
 
     return (
@@ -93,40 +73,44 @@ class SheetTable extends React.Component {
         onKeyDown={event => {
           // Key events don't reach here from within the editable cell input field
           if (event.key === 'Enter') {
-            startEditingCell(selectedCellCoor.toJS());
+            startEditingCell('full', primarySelectedCoor.toJS());
           } else if (event.key === 'Tab') {
             event.preventDefault();
-            moveSelectedCellRight();
+            if (event.shiftKey) {
+              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, -1]));
+            } else {
+              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, 1]));
+            }
           } else if (event.key === 'Backspace' || event.key === 'Delete') {
             event.preventDefault();
-            if (isRangeSelected) {
-              clearCellRange(selectedRangeCoors.toJS());
+            if (selectedRangeMode === 'basic') {
+              deleteRange(selectedRangeCoors.toJS());
             } else {
-              clearCellRange([selectedCellCoor.toJS(), selectedCellCoor.toJS()]);
+              deleteRange([primarySelectedCoor.toJS(), primarySelectedCoor.toJS()]);
             }
           } else if (event.key === 'ArrowUp') {
             if (event.shiftKey) {
-              moveRangeEndUp();
+              setSelectedRange(selectedRangeMode, translateRange(selectedRangeCoors.toJS(), [[0, 0], [-1, 0]]));
             } else {
-              moveSelectedCellUp();
+              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [-1, 0]));
             }
           } else if (event.key === 'ArrowDown') {
             if (event.shiftKey) {
-              moveRangeEndDown();
+              setSelectedRange(selectedRangeMode, translateRange(selectedRangeCoors.toJS(), [[0, 0], [1, 0]]));
             } else {
-              moveSelectedCellDown();
+              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [1, 0]));
             }
           } else if (event.key === 'ArrowLeft') {
             if (event.shiftKey) {
-              moveRangeEndLeft();
+              setSelectedRange(selectedRangeMode, translateRange(selectedRangeCoors.toJS(), [[0, 0], [0, -1]]));
             } else {
-              moveSelectedCellLeft();
+              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, -1]));
             }
           } else if (event.key === 'ArrowRight') {
             if (event.shiftKey) {
-              moveRangeEndRight();
+              setSelectedRange(selectedRangeMode, translateRange(selectedRangeCoors.toJS(), [[0, 0], [0, 1]]));
             } else {
-              moveSelectedCellRight();
+              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, 1]));
             }
           } else if (
             event.key !== 'Control' &&
@@ -134,11 +118,11 @@ class SheetTable extends React.Component {
             event.key !== 'Shift' &&
             !event.metaKey
           ) {
-            startEditingCell(selectedCellCoor.toJS(), true);
+            startEditingCell('quick', primarySelectedCoor.toJS());
           }
         }}
         ref={table => {
-          if (table && !isEditingCell) {
+          if (table && editMode === 'none') {
             table.focus();
           }
         }}
@@ -159,25 +143,18 @@ class SheetTable extends React.Component {
                 {
                   row.map((cell, cellIndex) => {
                     const cellCoor = [rowIndex, cellIndex];
-                    const isSelected = isMatchingCoors(cellCoor, selectedCellCoor.toJS());
+                    const isSelected = isMatchingCoors(cellCoor, primarySelectedCoor.toJS());
                     const isEditing = isMatchingCoors(cellCoor, editingCellCoor.toJS());
-                    const isInRange = isRangeSelected && isCoorInRange(cellCoor, positivizeRange(selectedRangeCoors.toJS()));
-                    const isInsertingFormulaRange = isInsertingFormulaCellRef && isCoorInRange(cellCoor, positivizeRange(insertionRangeCoors.toJS()));
-                    const isAutofilling = isSelectingAutofillRange && isCoorInRange(cellCoor, positivizeRange(autofillRangeCoors.toJS()));
+                    const isInRange = isCoorInRange(cellCoor, positivizeRange(selectedRangeCoors.toJS()));
+                    const isAutofilling = selectedRangeMode === 'autofill' && isInRange;
+                    const isInsertingFormulaRange = selectedRangeMode === 'formula' && isInRange;
 
-                    let currentSelectionRange;
-                    if (isInsertingFormulaCellRef) {
-                      currentSelectionRange = positivizeRange(insertionRangeCoors.toJS());
-                    } else if (isSelectingAutofillRange) {
-                      currentSelectionRange = positivizeRange(autofillRangeCoors.toJS());
-                    } else {
-                      currentSelectionRange = positivizeRange(selectedRangeCoors.toJS());
-                    }
+                    const currentSelectionRange = positivizeRange(selectedRangeCoors.toJS());
 
                     const cssClass = classNames({
                       [styles.selected]: isSelected,
                       [styles.editing]: isEditing,
-                      [styles.rangeSelected]: isInRange,
+                      [styles.rangeSelected]: isInRange && rangeSize(selectedRangeCoors.toJS()) > 1,
                       [styles.number]: isNumber(cell.get('val')),
                       [styles.insertionSelected]: isInsertingFormulaRange,
                       [styles.autofillSelected]: isAutofilling,
@@ -212,7 +189,11 @@ class SheetTable extends React.Component {
                               if (event.key === 'Enter') {
                                 setCellValue(cellCoor, event.target.value);
                                 stopEditing();
-                                moveSelectedCellDown();
+                                if (event.shiftKey) {
+                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [-1, 0]));
+                                } else {
+                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [1, 0]));
+                                }
                               } else if (event.key === 'Escape') {
                                 event.preventDefault();
                                 stopEditing();
@@ -220,33 +201,33 @@ class SheetTable extends React.Component {
                                 event.preventDefault();
                                 setCellValue(cellCoor, event.target.value);
                                 stopEditing();
-                                moveSelectedCellRight();
+                                setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, 1]));
                               }
 
-                              if (isQuickEditing) {
+                              if (editMode === 'quick') {
                                 if (event.key === 'ArrowUp') {
                                   setCellValue(cellCoor, event.target.value);
                                   stopEditing();
-                                  moveSelectedCellUp();
+                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [-1, 0]));
                                 } else if (event.key === 'ArrowDown') {
                                   setCellValue(cellCoor, event.target.value);
                                   stopEditing();
-                                  moveSelectedCellDown();
+                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [1, 0]));
                                 } else if (event.key === 'ArrowLeft') {
                                   setCellValue(cellCoor, event.target.value);
                                   stopEditing();
-                                  moveSelectedCellLeft();
+                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, -1]));
                                 } else if (event.key === 'ArrowRight') {
                                   setCellValue(cellCoor, event.target.value);
                                   stopEditing();
-                                  moveSelectedCellRight();
+                                  setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, 1]));
                                 }
                               }
                             }}
                             ref={input => {
                               if (input && !isEditingValueDirty) {
                                 input.focus();
-                                if (isQuickEditing) {
+                                if (editMode === 'quick') {
                                   // Select all the text
                                   input.select();
                                 } else {
@@ -263,32 +244,28 @@ class SheetTable extends React.Component {
                           className={cssClass}
                           onMouseDown={event => {
                             if (
-                              isEditingCell &&
+                              editMode !== 'none' &&
                               isFormula(editingCellValue) &&
                               isValidFormulaSymbol(editingCellValue.charAt(editingCellCaretPos - 1))
                             ) {
                               event.preventDefault();
-                              startInsertingFormulaCellRef();
-                              updateInsertedCellRef([cellCoor, cellCoor]);
+                              startSelectingRange('formula');
+                              setSelectedRange('formula', [cellCoor, cellCoor]);
+                            } else if (event.shiftKey) {
+                              setSelectedRange(selectedRangeMode, [selectedRangeCoors.toJS()[0], cellCoor]);
                             } else {
-                              setSelectedCell(cellCoor);
-                              startSelectingRange();
+                              setPrimarySelectedCoor(cellCoor);
+                              startSelectingRange('basic');
                             }
                           }}
                           onMouseUp={() => {
                             if (isSelectingRange) {
                               stopSelectingRange();
-                            } else if (isInsertingFormulaCellRef) {
-                              stopInsertingFormulaCellRef();
                             }
                           }}
                           onMouseOver={() => {
                             if (isSelectingRange) {
-                              setSelectedRange([selectedCellCoor.toJS(), cellCoor]);
-                            } else if (isInsertingFormulaCellRef) {
-                              updateInsertedCellRef([insertionRangeCoors.get(0).toJS(), cellCoor]);
-                            } else if (isSelectingAutofillRange) {
-                              setSelectedAutofillRange([autofillRangeCoors.get(0).toJS(), cellCoor]);
+                              setSelectedRange(selectedRangeMode, [selectedRangeCoors.toJS()[0], cellCoor]);
                             }
                           }}
                           onDoubleClick={() => {
@@ -297,17 +274,16 @@ class SheetTable extends React.Component {
                         >
                           <span>{cell.get('val')}</span>
                           {
-                            !isRangeSelected && isSelected ?
+                            isSelected && rangeSize(selectedRangeCoors.toJS()) === 1 ?
                               <div
                                 className={styles.autofillHandle}
                                 onMouseDown={event => {
                                   event.stopPropagation();
-                                  startSelectingAutofillRange();
-                                  setSelectedAutofillRange([cellCoor, cellCoor]);
+                                  startSelectingRange('autofill');
                                 }}
                                 onMouseUp={event => {
                                   event.stopPropagation();
-                                  stopSelectingAutofillRange();
+                                  stopSelectingRange();
                                 }}
                               ></div>
                             :
@@ -330,45 +306,25 @@ SheetTable.propTypes = {
   sheetData: PropTypes.instanceOf(Immutable.List).isRequired,
   rowHeaderData: PropTypes.instanceOf(Immutable.List).isRequired,
   colHeaderData: PropTypes.instanceOf(Immutable.List).isRequired,
-  isEditingCell: PropTypes.bool,
-  isQuickEditing: PropTypes.bool,
+  selectedRangeMode: PropTypes.string.isRequired,
+  editMode: PropTypes.string.isRequired,
   editingCellCoor: PropTypes.instanceOf(Immutable.List).isRequired,
   editingCellValue: PropTypes.any,
   editingCellCaretPos: PropTypes.number,
   isEditingValueDirty: PropTypes.bool,
-  isCellSelected: PropTypes.bool,
-  isInsertingFormulaCellRef: PropTypes.bool,
-  insertionRangeCoors: PropTypes.instanceOf(Immutable.List).isRequired,
-  selectedCellCoor: PropTypes.instanceOf(Immutable.List).isRequired,
+  primarySelectedCoor: PropTypes.instanceOf(Immutable.List).isRequired,
   setCellValue: PropTypes.func.isRequired,
   setEditValue: PropTypes.func.isRequired,
   startEditingCell: PropTypes.func.isRequired,
   stopEditing: PropTypes.func.isRequired,
-  clearCellRange: PropTypes.func.isRequired,
+  deleteRange: PropTypes.func.isRequired,
   setEditingCellCaretPos: PropTypes.func.isRequired,
-  startInsertingFormulaCellRef: PropTypes.func.isRequired,
-  stopInsertingFormulaCellRef: PropTypes.func.isRequired,
-  updateInsertedCellRef: PropTypes.func.isRequired,
-  setSelectedCell: PropTypes.func.isRequired,
-  moveSelectedCellUp: PropTypes.func.isRequired,
-  moveSelectedCellDown: PropTypes.func.isRequired,
-  moveSelectedCellLeft: PropTypes.func.isRequired,
-  moveSelectedCellRight: PropTypes.func.isRequired,
+  setPrimarySelectedCoor: PropTypes.func.isRequired,
   selectedRangeCoors: PropTypes.instanceOf(Immutable.List).isRequired,
-  isRangeSelected: PropTypes.bool.isRequired,
   isSelectingRange: PropTypes.bool.isRequired,
   setSelectedRange: PropTypes.func.isRequired,
   startSelectingRange: PropTypes.func.isRequired,
   stopSelectingRange: PropTypes.func.isRequired,
-  moveRangeEndUp: PropTypes.func.isRequired,
-  moveRangeEndDown: PropTypes.func.isRequired,
-  moveRangeEndLeft: PropTypes.func.isRequired,
-  moveRangeEndRight: PropTypes.func.isRequired,
-  isSelectingAutofillRange: PropTypes.bool.isRequired,
-  autofillRangeCoors: PropTypes.instanceOf(Immutable.List).isRequired,
-  startSelectingAutofillRange: PropTypes.func.isRequired,
-  stopSelectingAutofillRange: PropTypes.func.isRequired,
-  setSelectedAutofillRange: PropTypes.func.isRequired,
 };
 
 export default SheetTable;
