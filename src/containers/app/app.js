@@ -3,18 +3,7 @@ import styles from './app.css';
 import {connect} from 'react-redux';
 import React from 'react';
 
-import {
-  setCellValue,
-  setEditValue,
-  startEditingCell,
-  stopEditing,
-  deleteRange,
-  setEditingCellCaretPos,
-  setPrimarySelectedCoor,
-  setSelectedRange,
-  startSelectingRange,
-  stopSelectingRange,
-} from '../../reducers/sheetReducer';
+import * as actions from '../../reducers/sheetReducer';
 
 import {rowHeaderSelector, colHeaderSelector} from '../../selectors/sheetSelector';
 import SheetTable from '../../components/sheetTable/sheetTable';
@@ -29,32 +18,56 @@ const App = props => {
 };
 
 const mapStateToProps = state => ({
-  sheetData: state.getIn(['sheet', 'data']),
+  sheet: state.get('sheet'),
   rowHeaderData: rowHeaderSelector(state.get('sheet')),
   colHeaderData: colHeaderSelector(state.get('sheet')),
-  selectedRangeMode: state.getIn(['sheet', 'selectedRangeMode']),
-  editMode: state.getIn(['sheet', 'editMode']),
-  isQuickEditing: state.getIn(['sheet', 'isQuickEditing']),
-  editingCellCoor: state.getIn(['sheet', 'editingCellCoor']),
-  editingCellValue: state.getIn(['sheet', 'editingCellValue']),
-  editingCellCaretPos: state.getIn(['sheet', 'editingCellCaretPos']),
-  isEditingValueDirty: state.getIn(['sheet', 'isEditingValueDirty']),
-  primarySelectedCoor: state.getIn(['sheet', 'primarySelectedCoor']),
-  isSelectingRange: state.getIn(['sheet', 'isSelectingRange']),
-  selectedRangeCoors: state.getIn(['sheet', 'selectedRangeCoors']),
 });
 
 const mapDispatchToProps = {
-  setCellValue,
-  setEditValue,
-  startEditingCell,
-  stopEditing,
-  deleteRange,
-  setEditingCellCaretPos,
-  setPrimarySelectedCoor,
-  setSelectedRange,
-  startSelectingRange,
-  stopSelectingRange,
+  cellMouseDown: actions.cellMouseDown,
+  cellMouseOver: actions.cellMouseOver,
+  cellMouseUp: actions.cellMouseUp,
+  cellShiftMouseDown: actions.cellShiftMouseDown,
+  cellDoubleClick: actions.cellDoubleClick,
+
+  autofillMouseDown: actions.autofillMouseDown,
+  autofillMouseUp: actions.autofillMouseUp,
+
+  documentMouseUp: actions.documentMouseUp,
+
+  tableKeyEnter: actions.tableKeyEnter,
+  tableKeyShiftEnter: actions.tableKeyShiftEnter,
+  tableKeyTab: actions.tableKeyTab,
+  tableKeyShiftTab: actions.tableKeyShiftTab,
+  tableKeyEsc: actions.tableKeyEsc,
+  tableKeyDelete: actions.tableKeyDelete,
+
+  tableKeyUp: actions.tableKeyUp,
+  tableKeyDown: actions.tableKeyDown,
+  tableKeyLeft: actions.tableKeyLeft,
+  tableKeyRight: actions.tableKeyRight,
+
+  tableKeyShiftUp: actions.tableKeyShiftUp,
+  tableKeyShiftDown: actions.tableKeyShiftDown,
+  tableKeyShiftLeft: actions.tableKeyShiftLeft,
+  tableKeyShiftRight: actions.tableKeyShiftRight,
+
+  tableKeyOther: actions.tableKeyOther,
+
+  updateInputCellValue: actions.updateInputCellValue,
+  updateInputCellCaretPos: actions.updateInputCellCaretPos,
+
+
+
+  setCellValue: actions.setCellValue,
+  setEditValue: actions.setEditValue,
+  startEditingCell: actions.startEditingCell,
+  stopEditing: actions.stopEditing,
+  deleteRange: actions.deleteRange,
+  seteditValueCaretPos: actions.seteditValueCaretPos,
+  setPrimarySelectedCoor: actions.setPrimarySelectedCoor,
+  setSelectedRange: actions.setSelectedRange,
+  stopSelectingRange: actions.stopSelectingRange,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

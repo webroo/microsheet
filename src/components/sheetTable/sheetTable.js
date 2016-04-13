@@ -1,9 +1,8 @@
 import styles from './sheetTable.css';
 
-import Immutable from 'immutable';
 import React, {PropTypes} from 'react';
 
-import {translateCoor, translateRange} from '../../utils/sheetUtils';
+import {isMatchingCoors, isCoorInRange, positivizeRange} from '../../utils/sheetUtils';
 import SheetCell from './sheetCell';
 
 class SheetTable extends React.Component {
@@ -21,36 +20,11 @@ class SheetTable extends React.Component {
   }
 
   onDocumentMouseUp() {
-    if (this.props.isSelectingRange) {
-      this.props.stopSelectingRange();
-    }
+    this.props.documentMouseUp();
   }
 
   render() {
-    const {
-      sheetData,
-      rowHeaderData,
-      colHeaderData,
-      selectedRangeMode,
-      editMode,
-      editingCellCoor,
-      editingCellValue,
-      editingCellCaretPos,
-      isEditingValueDirty,
-      primarySelectedCoor,
-      setCellValue,
-      setEditValue,
-      startEditingCell,
-      stopEditing,
-      deleteRange,
-      setEditingCellCaretPos,
-      setPrimarySelectedCoor,
-      selectedRangeCoors,
-      isSelectingRange,
-      setSelectedRange,
-      startSelectingRange,
-      stopSelectingRange,
-    } = this.props;
+    const props = this.props;
 
     return (
       <table
@@ -59,44 +33,46 @@ class SheetTable extends React.Component {
         onKeyDown={event => {
           // Key events don't reach here from within the editable cell input field
           if (event.key === 'Enter') {
-            startEditingCell('full', primarySelectedCoor.toJS());
+            if (event.shiftKey) {
+              props.tableKeyShiftEnter();
+            } else {
+              props.tableKeyEnter();
+            }
           } else if (event.key === 'Tab') {
             event.preventDefault();
             if (event.shiftKey) {
-              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, -1]));
+              props.tableKeyShiftTab();
             } else {
-              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, 1]));
+              props.tableKeyTab();
             }
           } else if (event.key === 'Backspace' || event.key === 'Delete') {
             event.preventDefault();
-            if (selectedRangeMode === 'basic') {
-              deleteRange(selectedRangeCoors.toJS());
-            } else {
-              deleteRange([primarySelectedCoor.toJS(), primarySelectedCoor.toJS()]);
-            }
+            props.tableKeyDelete();
+          } else if (event.key === 'Escape') {
+            props.tableKeyEsc();
           } else if (event.key === 'ArrowUp') {
             if (event.shiftKey) {
-              setSelectedRange(selectedRangeMode, translateRange(selectedRangeCoors.toJS(), [[0, 0], [-1, 0]]));
+              props.tableKeyShiftUp();
             } else {
-              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [-1, 0]));
+              props.tableKeyUp();
             }
           } else if (event.key === 'ArrowDown') {
             if (event.shiftKey) {
-              setSelectedRange(selectedRangeMode, translateRange(selectedRangeCoors.toJS(), [[0, 0], [1, 0]]));
+              props.tableKeyShiftDown();
             } else {
-              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [1, 0]));
+              props.tableKeyDown();
             }
           } else if (event.key === 'ArrowLeft') {
             if (event.shiftKey) {
-              setSelectedRange(selectedRangeMode, translateRange(selectedRangeCoors.toJS(), [[0, 0], [0, -1]]));
+              props.tableKeyShiftLeft();
             } else {
-              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, -1]));
+              props.tableKeyLeft();
             }
           } else if (event.key === 'ArrowRight') {
             if (event.shiftKey) {
-              setSelectedRange(selectedRangeMode, translateRange(selectedRangeCoors.toJS(), [[0, 0], [0, 1]]));
+              props.tableKeyShiftRight();
             } else {
-              setPrimarySelectedCoor(translateCoor(primarySelectedCoor.toJS(), [0, 1]));
+              props.tableKeyRight();
             }
           } else if (
             event.key !== 'Control' &&
@@ -105,11 +81,11 @@ class SheetTable extends React.Component {
             event.key !== 'Escape' &&
             !event.metaKey
           ) {
-            startEditingCell('quick', primarySelectedCoor.toJS());
+            props.tableKeyOther();
           }
         }}
         ref={table => {
-          if (table && editMode === 'none') {
+          if (table && props.sheet.get('editMode') === 'none') {
             table.focus();
           }
         }}
@@ -118,42 +94,45 @@ class SheetTable extends React.Component {
           <tr>
             <th></th>
             {
-              rowHeaderData.map((cell, cellIndex) => (
+              props.rowHeaderData.map((cell, cellIndex) => (
                 <th scope="col" key={cellIndex}>{cell}</th>
               ))
             }
           </tr>
           {
-            sheetData.map((row, rowIndex) => (
+            props.sheet.get('data').map((row, rowIndex) => (
               <tr key={rowIndex}>
-                <th scope="row">{colHeaderData.get(rowIndex)}</th>
+                <th scope="row">{props.colHeaderData.get(rowIndex)}</th>
                 {
-                  row.map((cellData, cellIndex) => (
-                    <SheetCell
-                      key={cellIndex}
-                      cellData={cellData}
-                      cellCoor={[rowIndex, cellIndex]}
-                      primarySelectedCoor={primarySelectedCoor}
-                      selectedRangeCoors={selectedRangeCoors}
-                      selectedRangeMode={selectedRangeMode}
-                      isSelectingRange={isSelectingRange}
-                      editingCellCoor={editingCellCoor}
-                      editingCellValue={editingCellValue}
-                      editMode={editMode}
-                      isEditingValueDirty={isEditingValueDirty}
-                      editingCellCaretPos={editingCellCaretPos}
+                  row.map((cellData, cellIndex) => {
+                    const cellCoor = [rowIndex, cellIndex];
+                    return (
+                      <SheetCell
+                        key={cellIndex}
+                        cellData={cellData}
+                        cellCoor={cellCoor}
+                        isPrimaryCell={isMatchingCoors(cellCoor, props.sheet.get('primarySelectedCoor').toJS())}
+                        isEditing={isMatchingCoors(cellCoor, props.sheet.get('editCoor').toJS())}
+                        isInRange={isCoorInRange(cellCoor, positivizeRange(props.sheet.get('selectedRange').toJS()))}
+                        selectionMode={props.sheet.get('selectionMode')}
+                        selectedRange={props.sheet.get('selectedRange')}
 
-                      setEditValue={setEditValue}
-                      setEditingCellCaretPos={setEditingCellCaretPos}
-                      setCellValue={setCellValue}
-                      stopEditing={stopEditing}
-                      setPrimarySelectedCoor={setPrimarySelectedCoor}
-                      startSelectingRange={startSelectingRange}
-                      setSelectedRange={setSelectedRange}
-                      stopSelectingRange={stopSelectingRange}
-                      startEditingCell={startEditingCell}
-                    />
-                  ))
+                        editMode={props.sheet.get('editMode')}
+                        editValue={props.sheet.get('editValue')}
+                        isEditValueDirty={props.sheet.get('isEditValueDirty')}
+
+                        cellMouseDown={props.cellMouseDown}
+                        cellMouseOver={props.cellMouseOver}
+                        cellMouseUp={props.cellMouseUp}
+                        cellShiftMouseDown={props.cellShiftMouseDown}
+                        cellDoubleClick={props.cellDoubleClick}
+                        autofillMouseDown={props.autofillMouseDown}
+                        autofillMouseUp={props.autofillMouseUp}
+                        updateInputCellValue={props.updateInputCellValue}
+                        updateInputCellCaretPos={props.updateInputCellCaretPos}
+                      />
+                    );
+                  })
                 }
               </tr>
             ))
@@ -163,30 +142,5 @@ class SheetTable extends React.Component {
     );
   }
 }
-
-SheetTable.propTypes = {
-  sheetData: PropTypes.instanceOf(Immutable.List).isRequired,
-  rowHeaderData: PropTypes.instanceOf(Immutable.List).isRequired,
-  colHeaderData: PropTypes.instanceOf(Immutable.List).isRequired,
-  selectedRangeMode: PropTypes.string.isRequired,
-  editMode: PropTypes.string.isRequired,
-  editingCellCoor: PropTypes.instanceOf(Immutable.List).isRequired,
-  editingCellValue: PropTypes.any,
-  editingCellCaretPos: PropTypes.number,
-  isEditingValueDirty: PropTypes.bool,
-  primarySelectedCoor: PropTypes.instanceOf(Immutable.List).isRequired,
-  setCellValue: PropTypes.func.isRequired,
-  setEditValue: PropTypes.func.isRequired,
-  startEditingCell: PropTypes.func.isRequired,
-  stopEditing: PropTypes.func.isRequired,
-  deleteRange: PropTypes.func.isRequired,
-  setEditingCellCaretPos: PropTypes.func.isRequired,
-  setPrimarySelectedCoor: PropTypes.func.isRequired,
-  selectedRangeCoors: PropTypes.instanceOf(Immutable.List).isRequired,
-  isSelectingRange: PropTypes.bool.isRequired,
-  setSelectedRange: PropTypes.func.isRequired,
-  startSelectingRange: PropTypes.func.isRequired,
-  stopSelectingRange: PropTypes.func.isRequired,
-};
 
 export default SheetTable;
