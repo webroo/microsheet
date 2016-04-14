@@ -23,7 +23,7 @@ const SheetCell = props => {
   const cssClass = classNames({
     [styles.selected]: props.isPrimaryCell,
     [styles.editing]: props.isEditing,
-    [styles.rangeSelected]: props.isInRange && rangeSize(props.selectedRange.toJS()) > -1,
+    [styles.rangeSelected]: props.isInRange && rangeSize(props.selectedRange.toJS()) > 1,
     [styles.number]: isNumber(props.cellData.get('val')),
     [styles.insertionSelected]: isInsertingFormulaRange,
     [styles.autofillSelected]: isAutofilling,
