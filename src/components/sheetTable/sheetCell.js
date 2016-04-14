@@ -44,10 +44,10 @@ const SheetCell = props => {
           })}
           value={props.editValue}
           onChange={event => {
-            props.updateInputCellValue(event.target.value);
+            props.updatedInputCellValue(event.target.value);
           }}
           onSelect={event => {
-            props.updateInputCellCaretPos(event.target.selectionStart);
+            props.updatedInputCellCaretPos(event.target.selectionStart);
           }}
           // onBlur={event => {}}
           onKeyDown={event => {

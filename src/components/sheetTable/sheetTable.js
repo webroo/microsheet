@@ -116,7 +116,6 @@ class SheetTable extends React.Component {
                         isInRange={isCoorInRange(cellCoor, positivizeRange(props.sheet.get('selectedRange').toJS()))}
                         selectionMode={props.sheet.get('selectionMode')}
                         selectedRange={props.sheet.get('selectedRange')}
-
                         editMode={props.sheet.get('editMode')}
                         editValue={props.sheet.get('editValue')}
                         isEditValueDirty={props.sheet.get('isEditValueDirty')}
@@ -128,8 +127,8 @@ class SheetTable extends React.Component {
                         cellDoubleClick={props.cellDoubleClick}
                         autofillMouseDown={props.autofillMouseDown}
                         autofillMouseUp={props.autofillMouseUp}
-                        updateInputCellValue={props.updateInputCellValue}
-                        updateInputCellCaretPos={props.updateInputCellCaretPos}
+                        updatedInputCellValue={props.updatedInputCellValue}
+                        updatedInputCellCaretPos={props.updatedInputCellCaretPos}
                       />
                     );
                   })

@@ -3,7 +3,8 @@ import styles from './app.css';
 import {connect} from 'react-redux';
 import React from 'react';
 
-import * as actions from '../../reducers/sheetReducer';
+import * as sheetActions from '../../reducers/sheetReducer';
+import * as sheetThunks from '../../reducers/sheetReducerThunks';
 
 import {rowHeaderSelector, colHeaderSelector} from '../../selectors/sheetSelector';
 import SheetTable from '../../components/sheetTable/sheetTable';
@@ -24,50 +25,36 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  cellMouseDown: actions.cellMouseDown,
-  cellMouseOver: actions.cellMouseOver,
-  cellMouseUp: actions.cellMouseUp,
-  cellShiftMouseDown: actions.cellShiftMouseDown,
-  cellDoubleClick: actions.cellDoubleClick,
+  cellMouseDown: sheetThunks.cellMouseDown,
+  cellMouseOver: sheetThunks.cellMouseOver,
+  cellMouseUp: sheetThunks.cellMouseUp,
+  cellShiftMouseDown: sheetThunks.cellShiftMouseDown,
+  cellDoubleClick: sheetThunks.cellDoubleClick,
+  autofillMouseDown: sheetThunks.autofillMouseDown,
+  autofillMouseUp: sheetThunks.autofillMouseUp,
+  documentMouseUp: sheetThunks.documentMouseUp,
 
-  autofillMouseDown: actions.autofillMouseDown,
-  autofillMouseUp: actions.autofillMouseUp,
+  tableKeyEnter: sheetThunks.tableKeyEnter,
+  tableKeyShiftEnter: sheetThunks.tableKeyShiftEnter,
+  tableKeyTab: sheetThunks.tableKeyTab,
+  tableKeyShiftTab: sheetThunks.tableKeyShiftTab,
+  tableKeyEsc: sheetThunks.tableKeyEsc,
+  tableKeyDelete: sheetThunks.tableKeyDelete,
 
-  documentMouseUp: actions.documentMouseUp,
+  tableKeyUp: sheetThunks.tableKeyUp,
+  tableKeyDown: sheetThunks.tableKeyDown,
+  tableKeyLeft: sheetThunks.tableKeyLeft,
+  tableKeyRight: sheetThunks.tableKeyRight,
 
-  tableKeyEnter: actions.tableKeyEnter,
-  tableKeyShiftEnter: actions.tableKeyShiftEnter,
-  tableKeyTab: actions.tableKeyTab,
-  tableKeyShiftTab: actions.tableKeyShiftTab,
-  tableKeyEsc: actions.tableKeyEsc,
-  tableKeyDelete: actions.tableKeyDelete,
+  tableKeyShiftUp: sheetThunks.tableKeyShiftUp,
+  tableKeyShiftDown: sheetThunks.tableKeyShiftDown,
+  tableKeyShiftLeft: sheetThunks.tableKeyShiftLeft,
+  tableKeyShiftRight: sheetThunks.tableKeyShiftRight,
 
-  tableKeyUp: actions.tableKeyUp,
-  tableKeyDown: actions.tableKeyDown,
-  tableKeyLeft: actions.tableKeyLeft,
-  tableKeyRight: actions.tableKeyRight,
+  tableKeyOther: sheetThunks.tableKeyOther,
 
-  tableKeyShiftUp: actions.tableKeyShiftUp,
-  tableKeyShiftDown: actions.tableKeyShiftDown,
-  tableKeyShiftLeft: actions.tableKeyShiftLeft,
-  tableKeyShiftRight: actions.tableKeyShiftRight,
-
-  tableKeyOther: actions.tableKeyOther,
-
-  updateInputCellValue: actions.updateInputCellValue,
-  updateInputCellCaretPos: actions.updateInputCellCaretPos,
-
-
-
-  setCellValue: actions.setCellValue,
-  setEditValue: actions.setEditValue,
-  startEditingCell: actions.startEditingCell,
-  stopEditing: actions.stopEditing,
-  deleteRange: actions.deleteRange,
-  seteditValueCaretPos: actions.seteditValueCaretPos,
-  setPrimarySelectedCoor: actions.setPrimarySelectedCoor,
-  setSelectedRange: actions.setSelectedRange,
-  stopSelectingRange: actions.stopSelectingRange,
+  updatedInputCellValue: sheetActions.updatedInputCellValue,
+  updatedInputCellCaretPos: sheetActions.updatedInputCellCaretPos,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

@@ -1,20 +1,6 @@
 import Immutable from 'immutable';
 
 import {createReducer} from '../utils/reduxUtils';
-import {
-  computeSheet,
-  coerceStringToNumber,
-  getAddrFromCoor,
-  capitalizeExpression,
-  rangeSize,
-  expandCoorRange,
-  getAddrRangeFromCoorRange,
-  autofillSheet,
-  createEmptyCoor,
-  createEmptyCoorRange,
-  clampRangeToRange,
-} from '../utils/sheetUtils';
-
 import * as sheetUtils from '../utils/sheetUtils';
 
 // The `raw` property is the underlying user input, and `val` is the evaluated (displayed) output.
@@ -31,12 +17,14 @@ const initialState = Immutable.fromJS({
     [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
     [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
     [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+    [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+    [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
   ],
 
-  primarySelectedCoor: createEmptyCoor(),
+  primarySelectedCoor: sheetUtils.createEmptyCoor(),
 
   selectionMode: 'none', // none/basic/formula/autofill
-  selectedRange: createEmptyCoorRange(),
+  selectedRange: sheetUtils.createEmptyCoorRange(),
   isSelectingRange: false,
 
   editMode: 'none', // none/full/quick
@@ -49,54 +37,21 @@ const initialState = Immutable.fromJS({
   formulaValueInsertPos: 0,
 });
 
-// --------------------------------------------------------------------------
-
-export const cellMouseDown = coor => ({type: 'CELL_MOUSE_DOWN', coor});
-export const cellMouseOver = coor => ({type: 'CELL_MOUSE_OVER', coor});
-export const cellMouseUp = coor => ({type: 'CELL_MOUSE_UP', coor});
-export const cellShiftMouseDown = coor => ({type: 'CELL_SHIFT_MOUSE_DOWN', coor});
-export const cellDoubleClick = coor => ({type: 'CELL_DOUBLE_CLICK', coor});
-
-export const autofillMouseDown = coor => ({type: 'AUTOFILL_MOUSE_DOWN', coor});
-export const autofillMouseUp = coor => ({type: 'AUTOFILL_MOUSE_UP', coor});
-
-export const documentMouseUp = () => ({type: 'DOCUMENT_MOUSE_UP'});
-
-export const tableKeyEnter = () => ({type: 'TABLE_KEY_ENTER'});
-export const tableKeyShiftEnter = () => ({type: 'TABLE_KEY_SHIFT_ENTER'});
-export const tableKeyTab = () => ({type: 'TABLE_KEY_TAB'});
-export const tableKeyShiftTab = () => ({type: 'TABLE_KEY_SHIFT_TAB'});
-export const tableKeyEsc = () => ({type: 'TABLE_KEY_ESC'});
-export const tableKeyDelete = () => ({type: 'TABLE_KEY_DELETE'});
-
-// TODO: can these be handled up the actions above?
-// export const inputCellKeyEnter = () => ({type: 'INPUT_CELL_KEY_ENTER'});
-// export const inputCellKeyShiftEnter = () => ({type: 'INPUT_CELL_KEY_SHIFT_ENTER'});
-// export const inputCellKeyTab = () => ({type: 'INPUT_CELL_KEY_TAB'});
-// export const inputCellKeyShiftTab = () => ({type: 'INPUT_CELL_KEY_SHIFT_TAB'});
-// export const inputCellKeyEsc = () => ({type: 'INPUT_CELL_KEY_ESC'});
-
-export const tableKeyUp = () => ({type: 'TABLE_KEY_UP'});
-export const tableKeyDown = () => ({type: 'TABLE_KEY_DOWN'});
-export const tableKeyLeft = () => ({type: 'TABLE_KEY_LEFT'});
-export const tableKeyRight = () => ({type: 'TABLE_KEY_RIGHT'});
-
-export const tableKeyShiftUp = () => ({type: 'TABLE_KEY_SHIFT_UP'});
-export const tableKeyShiftDown = () => ({type: 'TABLE_KEY_SHIFT_DOWN'});
-export const tableKeyShiftLeft = () => ({type: 'TABLE_KEY_SHIFT_LEFT'});
-export const tableKeyShiftRight = () => ({type: 'TABLE_KEY_SHIFT_RIGHT'});
-
-export const tableKeyOther = () => ({type: 'TABLE_KEY_OTHER'});
-
-export const updateInputCellValue = value => ({type: 'UPDATE_INPUT_CELL_VALUE', value});
-export const updateInputCellCaretPos = pos => ({type: 'UPDATE_INPUT_CELL_CARET_POS', pos});
-
-// --------------------------------------------------------------------------
+export const changedPrimarySelectedCoor = coor => ({type: 'CHANGED_PRIMARY_SELECTED_COOR', coor});
+export const startedSelectingRange = mode => ({type: 'STARTED_SELECTING_RANGE', mode});
+export const stoppedSelectingRange = () => ({type: 'STOPPED_SELECTING_RANGE'});
+export const changedSelectedRange = (mode, range) => ({type: 'CHANGED_SELECTED_RANGE', mode, range});
+export const startedEditingCell = (mode, coor) => ({type: 'STARTED_EDITING_CELL', mode, coor});
+export const committedEditValue = () => ({type: 'COMMITTED_EDIT_VALUE'});
+export const discardedEditValue = () => ({type: 'DISCARDED_EDIT_VALUE'});
+export const deletedRange = range => ({type: 'DELETED_RANGE', range});
+export const updatedInputCellValue = value => ({type: 'UPDATED_INPUT_CELL_VALUE', value});
+export const updatedInputCellCaretPos = pos => ({type: 'UPDATED_INPUT_CELL_CARET_POS', pos});
 
 function setBasicRange(state, range) {
   const maxRows = state.get('data').size - 1;
   const maxCols = state.getIn(['data', 0]).size - 1;
-  const clampedRange = clampRangeToRange(range, [[0, 0], [maxRows, maxCols]]);
+  const clampedRange = sheetUtils.clampRangeToRange(range, [[0, 0], [maxRows, maxCols]]);
 
   return state
     .set('selectionMode', 'basic')
@@ -129,10 +84,10 @@ function setAutofillRange(state, range) {
 function setFormulaRange(state, range) {
   const caretPos = state.get('formulaValueInsertPos');
   let cellAddr;
-  if (rangeSize(range) === 1) {
-    cellAddr = getAddrFromCoor(range[0]);
+  if (sheetUtils.rangeSize(range) === 1) {
+    cellAddr = sheetUtils.getAddrFromCoor(range[0]);
   } else {
-    cellAddr = getAddrRangeFromCoorRange(range);
+    cellAddr = sheetUtils.getAddrRangeFromCoorRange(range);
   }
   const editingValue = state.get('formulaValue');
   const newValue = editingValue.substring(0, caretPos) + cellAddr + editingValue.substring(caretPos);
@@ -148,40 +103,39 @@ function setCellValue(state, coor, value) {
   let newValue = value;
 
   if (sheetUtils.isFormula(value)) {
-    newValue = capitalizeExpression(value);
+    newValue = sheetUtils.capitalizeExpression(value);
   } else if (sheetUtils.isNumber(value)) {
-    newValue = coerceStringToNumber(value);
+    newValue = sheetUtils.coerceStringToNumber(value);
   } else {
     newValue = value.trim();
   }
 
   data = data.setIn([...coor, 'raw'], newValue);
-  data = computeSheet(data);
+  data = sheetUtils.computeSheet(data);
   return state.set('data', data);
 }
 
 function stopEditing(state) {
   return state
     .set('editMode', 'none')
-    .set('editCoor', Immutable.fromJS(createEmptyCoor()))
+    .set('editCoor', Immutable.fromJS(sheetUtils.createEmptyCoor()))
     .set('editValue', '')
     .set('isEditValueDirty', false);
 }
 
-// --------------------------------------------------------------------------
-
-const oldActionHandlers = {
-  SET_PRIMARY_SELECTED_COOR(state, action) {
+export const actionHandlers = {
+  CHANGED_PRIMARY_SELECTED_COOR(state, {coor}) {
     const maxRows = state.get('data').size - 1;
     const maxCols = state.getIn(['data', 0]).size - 1;
-    const newCoor = sheetUtils.clampCoorToRange(action.coor, [[0, 0], [maxRows, maxCols]]);
-    return state.set('primarySelectedCoor', Immutable.fromJS(newCoor));
+    const newCoor = sheetUtils.clampCoorToRange(coor, [[0, 0], [maxRows, maxCols]]);
+    return setBasicRange(state, [newCoor, newCoor])
+      .set('primarySelectedCoor', Immutable.fromJS(newCoor));
   },
 
-  START_SELECTING_RANGE(state, action) {
+  STARTED_SELECTING_RANGE(state, {mode}) {
     let newState = state;
 
-    if (action.mode === 'formula') {
+    if (mode === 'formula') {
       // Take a snapshot of the editing value
       newState = newState
         .set('formulaValue', newState.get('editValue'))
@@ -190,16 +144,16 @@ const oldActionHandlers = {
 
     return newState
       .set('isSelectingRange', true)
-      .set('selectionMode', action.mode);
+      .set('selectionMode', mode);
   },
 
-  STOP_SELECTING_RANGE(state) {
+  STOPPED_SELECTING_RANGE(state) {
     let newState = state.set('isSelectingRange', false);
 
     if (newState.get('selectionMode') === 'autofill') {
       let data = newState.get('data');
-      data = autofillSheet(data, newState.get('selectedRange').toJS());
-      data = computeSheet(data);
+      data = sheetUtils.autofillSheet(data, newState.get('selectedRange').toJS());
+      data = sheetUtils.computeSheet(data);
       newState = newState
         .set('data', data)
         .set('selectionMode', 'none')
@@ -212,412 +166,56 @@ const oldActionHandlers = {
     return newState;
   },
 
-  SET_SELECTED_RANGE(state, action) {
-    if (action.mode === 'basic') {
-      return setBasicRange(state, action.range);
-    } else if (action.mode === 'autofill') {
-      return setAutofillRange(state, action.range);
-    } else if (action.mode === 'formula') {
-      return setFormulaRange(state, action.range);
+  CHANGED_SELECTED_RANGE(state, {mode, range}) {
+    if (mode === 'basic') {
+      return setBasicRange(state, range);
+    } else if (mode === 'autofill') {
+      return setAutofillRange(state, range);
+    } else if (mode === 'formula') {
+      return setFormulaRange(state, range);
     }
     return state;
   },
 
-  START_EDITING_CELL(state, action) {
-    return state
-      .set('editMode', action.mode)
-      .set('editCoor', new Immutable.List(action.coor))
-      .set('editValue', state.getIn(['data', ...action.coor, 'raw']))
+  STARTED_EDITING_CELL(state, {mode, coor}) {
+    return setBasicRange(state, [coor, coor])
+      .set('editMode', mode)
+      .set('editCoor', new Immutable.List(coor))
+      .set('editValue', state.getIn(['data', ...coor, 'raw']))
       .set('isEditValueDirty', false);
   },
 
-  COMMIT_EDIT_VALUE(state) {
+  COMMITTED_EDIT_VALUE(state) {
     let newState = state;
     newState = setCellValue(newState, newState.get('editCoor'), newState.get('editValue'));
     newState = stopEditing(newState);
     return newState;
   },
 
-  DISCARD_EDIT_VALUE(state) {
+  DISCARDED_EDIT_VALUE(state) {
     return stopEditing(state);
   },
 
-  DELETE_RANGE(state, action) {
+  DELETED_RANGE(state, {range}) {
     let data = state.get('data');
-    expandCoorRange(action.range).forEach(coor => {
+    sheetUtils.expandCoorRange(range).forEach(coor => {
       data = data.setIn([...coor, 'raw'], '');
     });
-    data = computeSheet(data);
+    data = sheetUtils.computeSheet(data);
     return state.set('data', data);
   },
-};
 
-// --------------------------------------------------------------------------
-
-const newActionHandlers = {
-  CELL_MOUSE_DOWN(state, action) {
-    let newState = state;
-    if (state.get('editMode') !== 'none') {
-      newState = oldActionHandlers.START_SELECTING_RANGE(newState, {
-        mode: 'formula',
-      });
-      // TODO: can this be combined with START_SELECTING_RANGE so that you pass the starting coor to it?
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'formula',
-        range: [action.coor, action.coor],
-      });
-    } else {
-      newState = oldActionHandlers.SET_PRIMARY_SELECTED_COOR(newState, action);
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: [action.coor, action.coor],
-      });
-      newState = oldActionHandlers.START_SELECTING_RANGE(newState, {
-        mode: 'basic',
-      });
-    }
-    return newState;
-  },
-
-  CELL_MOUSE_OVER(state, action) {
-    if (state.get('isSelectingRange')) {
-      return oldActionHandlers.SET_SELECTED_RANGE(state, {
-        mode: state.get('selectionMode'),
-        range: [
-          state.getIn(['selectedRange', 0]).toJS(),
-          action.coor,
-        ],
-      });
-    }
-    return state;
-  },
-
-  CELL_MOUSE_UP(state) {
-    return oldActionHandlers.STOP_SELECTING_RANGE(state);
-  },
-
-  CELL_SHIFT_MOUSE_DOWN(state, action) {
-    return oldActionHandlers.SET_SELECTED_RANGE(state, {
-      mode: state.get('selectionMode'),
-      range: [
-        state.get('primarySelectedCoor').toJS(),
-        action.coor,
-      ],
-    });
-  },
-
-  CELL_DOUBLE_CLICK(state, action) {
-    return oldActionHandlers.START_EDITING_CELL(state, {
-      mode: 'full',
-      coor: action.coor,
-    });
-  },
-
-  AUTOFILL_MOUSE_DOWN(state, action) {
-    return oldActionHandlers.START_SELECTING_RANGE(state, {
-      mode: 'autofill',
-    });
-  },
-
-  AUTOFILL_MOUSE_UP(state, action) {
-    return oldActionHandlers.STOP_SELECTING_RANGE(state);
-  },
-
-  DOCUMENT_MOUSE_UP(state) {
-    if (state.get('isSelectingRange')) {
-      return state.set('isSelectingRange', false);
-    }
-    return state;
-  },
-
-  // TODO: this is a duplicate of the action below, but moves the primary cell down
-  TABLE_KEY_ENTER(state) {
-    let newState = state;
-    if (newState.get('editMode') === 'none') {
-      newState = oldActionHandlers.START_EDITING_CELL(newState, {
-        mode: 'full',
-        coor: newState.get('primarySelectedCoor').toJS(),
-      });
-    } else {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-      // TODO: this is also used in TABLE_KEY_TAB and TABLE_KEY_UP
-      const primarySelectedCoor = newState.get('primarySelectedCoor').toJS();
-      const newCoor = sheetUtils.translateCoor(primarySelectedCoor, [1, 0]);
-      newState = oldActionHandlers.SET_PRIMARY_SELECTED_COOR(newState, {
-        coor: newCoor,
-      });
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: [newCoor, newCoor],
-      });
-    }
-    return newState;
-  },
-
-  // TODO: this is a duplicate of the action above, but moves the primary cell up
-  TABLE_KEY_SHIFT_ENTER(state) {
-    let newState = state;
-    if (newState.get('editMode') === 'none') {
-      newState = oldActionHandlers.START_EDITING_CELL(newState, {
-        mode: 'full',
-        coor: newState.get('primarySelectedCoor').toJS(),
-      });
-    } else {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-      // TODO: this is also used in TABLE_KEY_TAB and TABLE_KEY_UP
-      const primarySelectedCoor = newState.get('primarySelectedCoor').toJS();
-      const newCoor = sheetUtils.translateCoor(primarySelectedCoor, [-1, 0]);
-      newState = oldActionHandlers.SET_PRIMARY_SELECTED_COOR(newState, {
-        coor: newCoor,
-      });
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: [newCoor, newCoor],
-      });
-    }
-    return newState;
-  },
-
-  TABLE_KEY_TAB(state) {
-    let newState = state;
-    if (newState.get('editMode') === 'none') {
-      // TODO: this is a duplicate of TABLE_KEY_RIGHT
-      const primarySelectedCoor = newState.get('primarySelectedCoor').toJS();
-      const newCoor = sheetUtils.translateCoor(primarySelectedCoor, [0, 1]);
-      newState = oldActionHandlers.SET_PRIMARY_SELECTED_COOR(newState, {
-        coor: newCoor,
-      });
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: [newCoor, newCoor],
-      });
-    } else {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-      // TODO: this is also used in TABLE_KEY_ENTER and TABLE_KEY_RIGHT
-      const primarySelectedCoor = newState.get('primarySelectedCoor').toJS();
-      const newCoor = sheetUtils.translateCoor(primarySelectedCoor, [0, 1]);
-      newState = oldActionHandlers.SET_PRIMARY_SELECTED_COOR(newState, {
-        coor: newCoor,
-      });
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: [newCoor, newCoor],
-      });
-    }
-    return newState;
-  },
-
-  TABLE_KEY_SHIFT_TAB(state) {
-    let newState = state;
-    if (newState.get('editMode') === 'none') {
-      // TODO: this is a duplicate of TABLE_KEY_LEFT
-      const primarySelectedCoor = newState.get('primarySelectedCoor').toJS();
-      const newCoor = sheetUtils.translateCoor(primarySelectedCoor, [0, -1]);
-      newState = oldActionHandlers.SET_PRIMARY_SELECTED_COOR(newState, {
-        coor: newCoor,
-      });
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: [newCoor, newCoor],
-      });
-    } else {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-      // TODO: this is also used in TABLE_KEY_SHIFT_ENTER and TABLE_KEY_LEFT
-      const primarySelectedCoor = newState.get('primarySelectedCoor').toJS();
-      const newCoor = sheetUtils.translateCoor(primarySelectedCoor, [0, -1]);
-      newState = oldActionHandlers.SET_PRIMARY_SELECTED_COOR(newState, {
-        coor: newCoor,
-      });
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: [newCoor, newCoor],
-      });
-    }
-    return newState;
-  },
-
-  TABLE_KEY_ESC(state) {
-    return oldActionHandlers.DISCARD_EDIT_VALUE(state);
-  },
-
-  TABLE_KEY_DELETE(state) {
-    if (state.get('editMode') === 'none') {
-      return oldActionHandlers.DELETE_RANGE(state, {
-        range: state.get('selectedRange').toJS(),
-      });
-    }
-    return state;
-  },
-
-  TABLE_KEY_UP(state) {
-    let newState = state;
-    if (newState.get('editMode') === 'quick') {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-    }
-    if (newState.get('editMode') !== 'full') {
-      // TODO: this is also used in TABLE_KEY_ENTER
-      const primarySelectedCoor = newState.get('primarySelectedCoor').toJS();
-      const newCoor = sheetUtils.translateCoor(primarySelectedCoor, [-1, 0]);
-      newState = oldActionHandlers.SET_PRIMARY_SELECTED_COOR(newState, {
-        coor: newCoor,
-      });
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: [newCoor, newCoor],
-      });
-    }
-    return newState;
-  },
-
-  TABLE_KEY_DOWN(state) {
-    let newState = state;
-    if (newState.get('editMode') === 'quick') {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-    }
-    if (newState.get('editMode') !== 'full') {
-      // TODO: this is also used in TABLE_KEY_ENTER
-      const primarySelectedCoor = newState.get('primarySelectedCoor').toJS();
-      const newCoor = sheetUtils.translateCoor(primarySelectedCoor, [1, 0]);
-      newState = oldActionHandlers.SET_PRIMARY_SELECTED_COOR(newState, {
-        coor: newCoor,
-      });
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: [newCoor, newCoor],
-      });
-    }
-    return newState;
-  },
-
-  TABLE_KEY_LEFT(state) {
-    let newState = state;
-    if (newState.get('editMode') === 'quick') {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-    }
-    if (newState.get('editMode') !== 'full') {
-      // TODO: this is also used in TABLE_KEY_ENTER
-      const primarySelectedCoor = newState.get('primarySelectedCoor').toJS();
-      const newCoor = sheetUtils.translateCoor(primarySelectedCoor, [0, -1]);
-      newState = oldActionHandlers.SET_PRIMARY_SELECTED_COOR(newState, {
-        coor: newCoor,
-      });
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: [newCoor, newCoor],
-      });
-    }
-    return newState;
-  },
-
-  TABLE_KEY_RIGHT(state) {
-    let newState = state;
-    if (newState.get('editMode') === 'quick') {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-    }
-    if (newState.get('editMode') !== 'full') {
-      // TODO: this is also used in TABLE_KEY_ENTER
-      const primarySelectedCoor = newState.get('primarySelectedCoor').toJS();
-      const newCoor = sheetUtils.translateCoor(primarySelectedCoor, [0, 1]);
-      newState = oldActionHandlers.SET_PRIMARY_SELECTED_COOR(newState, {
-        coor: newCoor,
-      });
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: [newCoor, newCoor],
-      });
-    }
-    return newState;
-  },
-
-  TABLE_KEY_SHIFT_UP(state) {
-    // TODO: some of this complexity might be aleviated by trapping key events inside
-    // the input element
-    let newState = state;
-    if (newState.get('editMode') === 'quick') {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-    } else if (newState.get('editMode') === 'none') {
-      // TODO: this is also used in TABLE_KEY_ENTER
-      const selectedRange = newState.get('selectedRange').toJS();
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: sheetUtils.translateRange(selectedRange, [[0, 0], [-1, 0]]),
-      });
-    }
-    return newState;
-  },
-
-  TABLE_KEY_SHIFT_DOWN(state) {
-    // TODO: some of this complexity might be aleviated by trapping key events inside
-    // the input element
-    let newState = state;
-    if (newState.get('editMode') === 'quick') {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-    } else if (newState.get('editMode') === 'none') {
-      // TODO: this is also used in TABLE_KEY_ENTER
-      const selectedRange = newState.get('selectedRange').toJS();
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: sheetUtils.translateRange(selectedRange, [[0, 0], [1, 0]]),
-      });
-    }
-    return newState;
-  },
-
-  TABLE_KEY_SHIFT_LEFT(state) {
-    // TODO: some of this complexity might be aleviated by trapping key events inside
-    // the input element
-    let newState = state;
-    if (newState.get('editMode') === 'quick') {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-    } else if (newState.get('editMode') === 'none') {
-      // TODO: this is also used in TABLE_KEY_ENTER
-      const selectedRange = newState.get('selectedRange').toJS();
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: sheetUtils.translateRange(selectedRange, [[0, 0], [0, -1]]),
-      });
-    }
-    return newState;
-  },
-
-  TABLE_KEY_SHIFT_RIGHT(state) {
-    // TODO: some of this complexity might be aleviated by trapping key events inside
-    // the input element
-    let newState = state;
-    if (newState.get('editMode') === 'quick') {
-      newState = oldActionHandlers.COMMIT_EDIT_VALUE(newState);
-    } else if (newState.get('editMode') === 'none') {
-      // TODO: this is also used in TABLE_KEY_ENTER
-      const selectedRange = newState.get('selectedRange').toJS();
-      newState = oldActionHandlers.SET_SELECTED_RANGE(newState, {
-        mode: 'basic',
-        range: sheetUtils.translateRange(selectedRange, [[0, 0], [0, 1]]),
-      });
-    }
-    return newState;
-  },
-
-  UPDATE_INPUT_CELL_VALUE(state, action) {
+  UPDATED_INPUT_CELL_VALUE(state, action) {
     return state
       .set('editValue', action.value)
       .set('isEditValueDirty', true);
   },
 
-  UPDATE_INPUT_CELL_CARET_POS(state, action) {
+  UPDATED_INPUT_CELL_CARET_POS(state, action) {
     return state
       .set('editValueCaretPos', action.pos)
       .set('isEditValueDirty', true);
   },
-
-  TABLE_KEY_OTHER(state) {
-    if (state.get('editMode') === 'none') {
-      return oldActionHandlers.START_EDITING_CELL(state, {
-        mode: 'quick',
-        coor: state.get('primarySelectedCoor').toJS(),
-      });
-    }
-    return state;
-  },
 };
 
-export default createReducer(initialState, Object.assign({}, oldActionHandlers, newActionHandlers));
+export default createReducer(initialState, actionHandlers);
