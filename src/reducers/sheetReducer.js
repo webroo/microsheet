@@ -40,9 +40,9 @@ const initialState = Immutable.fromJS({
 export const changedPrimarySelectedCoor = coor => ({type: 'CHANGED_PRIMARY_SELECTED_COOR', coor});
 export const startedSelectingRange = (mode, coor) => ({type: 'STARTED_SELECTING_RANGE', mode, coor});
 export const stoppedSelectingRange = () => ({type: 'STOPPED_SELECTING_RANGE'});
+export const changedSelectedRangeStart = coor => ({type: 'CHANGED_SELECTED_RANGE_START', coor});
+export const changedSelectedRangeEnd = coor => ({type: 'CHANGED_SELECTED_RANGE_END', coor});
 export const changedSelectedRange = (mode, range) => ({type: 'CHANGED_SELECTED_RANGE', mode, range});
-export const changedSelectedRangeStart = (mode, coor) => ({type: 'CHANGED_SELECTED_RANGE_START', mode, coor});
-export const changedSelectedRangeEnd = (mode, coor) => ({type: 'CHANGED_SELECTED_RANGE_END', mode, coor});
 export const startedEditingCell = (mode, coor) => ({type: 'STARTED_EDITING_CELL', mode, coor});
 export const committedEditValue = () => ({type: 'COMMITTED_EDIT_VALUE'});
 export const discardedEditValue = () => ({type: 'DISCARDED_EDIT_VALUE'});
@@ -183,18 +183,26 @@ export const actionHandlers = {
     return setSelectedRange(state, mode, range);
   },
 
-  CHANGED_SELECTED_RANGE_START(state, {mode, coor}) {
-    return setSelectedRange(state, mode, [
-      coor,
-      state.getIn(['selectedRange', 1]).toJS(),
-    ]);
+  CHANGED_SELECTED_RANGE_START(state, {coor}) {
+    return setSelectedRange(
+      state,
+      state.get('selectionMode'),
+      [
+        coor,
+        state.getIn(['selectedRange', 1]).toJS(),
+      ]
+    );
   },
 
-  CHANGED_SELECTED_RANGE_END(state, {mode, coor}) {
-    return setSelectedRange(state, mode, [
-      state.getIn(['selectedRange', 0]).toJS(),
-      coor,
-    ]);
+  CHANGED_SELECTED_RANGE_END(state, {coor}) {
+    return setSelectedRange(
+      state,
+      state.get('selectionMode'),
+      [
+        state.getIn(['selectedRange', 0]).toJS(),
+        coor,
+      ]
+    );
   },
 
   STARTED_EDITING_CELL(state, {mode, coor}) {

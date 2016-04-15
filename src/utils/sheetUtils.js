@@ -63,9 +63,12 @@ export const translateCoor = (coorA, coorB) => (
   [coorA[0] + coorB[0], coorA[1] + coorB[1]]
 );
 
-export const translateRange = (rangeA, rangeB) => (
-  [translateCoor(rangeA[0], rangeB[0]), translateCoor(rangeA[1], rangeB[1])]
-);
+export const translationIdentities = {
+  up: [-1, 0],
+  down: [1, 0],
+  left: [0, -1],
+  right: [0, 1],
+};
 
 export const clampCoorToRange = (coor, range) => {
   const pRange = positivizeRange(range);

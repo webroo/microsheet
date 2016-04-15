@@ -9,7 +9,7 @@ import {
   deletedRange,
 } from './sheetReducer';
 
-import {translateCoor, isFormula} from '../utils/sheetUtils';
+import {translateCoor, translationIdentities, isFormula} from '../utils/sheetUtils';
 
 export const cellMouseDown = coor => (dispatch, getState) => {
   const sheet = getState().getIn(['sheet']);
@@ -27,7 +27,7 @@ export const cellMouseDown = coor => (dispatch, getState) => {
 export const cellMouseOver = coor => (dispatch, getState) => {
   const sheet = getState().getIn(['sheet']);
   if (sheet.get('isSelectingRange')) {
-    dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), coor));
+    dispatch(changedSelectedRangeEnd(coor));
   }
 };
 
@@ -35,9 +35,8 @@ export const cellMouseUp = () => dispatch => {
   dispatch(stoppedSelectingRange());
 };
 
-export const cellShiftMouseDown = coor => (dispatch, getState) => {
-  const sheet = getState().getIn(['sheet']);
-  dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), coor));
+export const cellShiftMouseDown = coor => dispatch => {
+  dispatch(changedSelectedRangeEnd(coor));
 };
 
 export const cellDoubleClick = coor => dispatch => {
@@ -59,32 +58,27 @@ export const documentMouseUp = () => (dispatch, getState) => {
 };
 
 // TODO this is almost identical to the action below
-export const tableKeyEnter = () => (dispatch, getState) => {
+export const tableKeyEnter = shiftKey => (dispatch, getState) => {
   const sheet = getState().getIn(['sheet']);
   if (sheet.get('editMode') === 'none') {
     dispatch(startedEditingCell('full', sheet.get('primarySelectedCoor')));
   } else {
-    const newCoor = translateCoor(sheet.get('primarySelectedCoor').toJS(), [1, 0]);
+    const translationIdentity = shiftKey ? translationIdentities.up : translationIdentities.down;
+    const newCoor = translateCoor(sheet.get('primarySelectedCoor').toJS(), translationIdentity);
     dispatch(committedEditValue());
     dispatch(changedPrimarySelectedCoor(newCoor));
   }
 };
 
-export const tableKeyShiftEnter = () => (dispatch, getState) => {
-  const sheet = getState().getIn(['sheet']);
-  if (sheet.get('editMode') === 'none') {
-    dispatch(startedEditingCell('full', sheet.get('primarySelectedCoor')));
-  } else {
-    const newCoor = translateCoor(sheet.get('primarySelectedCoor').toJS(), [-1, 0]);
-    dispatch(committedEditValue());
-    dispatch(changedPrimarySelectedCoor(newCoor));
-  }
+export const tableKeyShiftEnter = () => dispatch => {
+  dispatch(tableKeyEnter(true));
 };
 
 // TODO this is almost identical to the action below
-export const tableKeyTab = () => (dispatch, getState) => {
+export const tableKeyTab = shiftKey => (dispatch, getState) => {
   const sheet = getState().getIn(['sheet']);
-  const newCoor = translateCoor(sheet.get('primarySelectedCoor').toJS(), [0, 1]);
+  const translationIdentity = shiftKey ? translationIdentities.left : translationIdentities.right;
+  const newCoor = translateCoor(sheet.get('primarySelectedCoor').toJS(), translationIdentity);
   if (sheet.get('editMode') === 'none') {
     dispatch(changedPrimarySelectedCoor(newCoor));
   } else {
@@ -93,15 +87,8 @@ export const tableKeyTab = () => (dispatch, getState) => {
   }
 };
 
-export const tableKeyShiftTab = () => (dispatch, getState) => {
-  const sheet = getState().getIn(['sheet']);
-  const newCoor = translateCoor(sheet.get('primarySelectedCoor').toJS(), [0, -1]);
-  if (sheet.get('editMode') === 'none') {
-    dispatch(changedPrimarySelectedCoor(newCoor));
-  } else {
-    dispatch(committedEditValue());
-    dispatch(changedPrimarySelectedCoor(newCoor));
-  }
+export const tableKeyShiftTab = () => dispatch => {
+  dispatch(tableKeyTab(true));
 };
 
 export const tableKeyEsc = () => dispatch => {
@@ -115,92 +102,61 @@ export const tableKeyDelete = () => (dispatch, getState) => {
   }
 };
 
-// TODO: this is almost identical to the other key actions
-// Either abstract into a common function, or create a generic arrowKey(direction) action?
-export const tableKeyUp = () => (dispatch, getState) => {
+export const tableKeyArrow = direction => (dispatch, getState) => {
   const sheet = getState().getIn(['sheet']);
   if (sheet.get('editMode') === 'quick') {
     dispatch(committedEditValue());
   }
   if (sheet.get('editMode') !== 'full') {
-    const newCoor = translateCoor(sheet.get('primarySelectedCoor').toJS(), [-1, 0]);
+    const currentCoor = sheet.get('primarySelectedCoor').toJS();
+    const translationIdentity = translationIdentities[direction];
+    const newCoor = translateCoor(currentCoor, translationIdentity);
     dispatch(changedPrimarySelectedCoor(newCoor));
   }
 };
 
-export const tableKeyDown = () => (dispatch, getState) => {
-  const sheet = getState().getIn(['sheet']);
-  if (sheet.get('editMode') === 'quick') {
-    dispatch(committedEditValue());
-  }
-  if (sheet.get('editMode') !== 'full') {
-    const newCoor = translateCoor(sheet.get('primarySelectedCoor').toJS(), [1, 0]);
-    dispatch(changedPrimarySelectedCoor(newCoor));
-  }
+export const tableKeyUp = () => dispatch => {
+  dispatch(tableKeyArrow('up'));
 };
 
-export const tableKeyLeft = () => (dispatch, getState) => {
-  const sheet = getState().getIn(['sheet']);
-  if (sheet.get('editMode') === 'quick') {
-    dispatch(committedEditValue());
-  }
-  if (sheet.get('editMode') !== 'full') {
-    const newCoor = translateCoor(sheet.get('primarySelectedCoor').toJS(), [0, -1]);
-    dispatch(changedPrimarySelectedCoor(newCoor));
-  }
+export const tableKeyDown = () => dispatch => {
+  dispatch(tableKeyArrow('down'));
 };
 
-export const tableKeyRight = () => (dispatch, getState) => {
-  const sheet = getState().getIn(['sheet']);
-  if (sheet.get('editMode') === 'quick') {
-    dispatch(committedEditValue());
-  }
-  if (sheet.get('editMode') !== 'full') {
-    const newCoor = translateCoor(sheet.get('primarySelectedCoor').toJS(), [0, 1]);
-    dispatch(changedPrimarySelectedCoor(newCoor));
-  }
+export const tableKeyLeft = () => dispatch => {
+  dispatch(tableKeyArrow('left'));
 };
 
-// TODO: this is almost identical to the other key actions
-// Either abstract into a common function, or create a generic arrowKey(direction) action?
-export const tableKeyShiftUp = () => (dispatch, getState) => {
+export const tableKeyRight = () => dispatch => {
+  dispatch(tableKeyArrow('right'));
+};
+
+export const tableKeyShiftArrow = direction => (dispatch, getState) => {
   const sheet = getState().getIn(['sheet']);
   if (sheet.get('editMode') === 'quick') {
     dispatch(committedEditValue());
   } else if (sheet.get('editMode') === 'none') {
-    const newEndCoor = translateCoor(sheet.getIn(['selectedRange', 1]).toJS(), [-1, 0]);
-    dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), newEndCoor));
+    const currentEndCoor = sheet.getIn(['selectedRange', 1]).toJS();
+    const translationIdentity = translationIdentities[direction];
+    const newCoor = translateCoor(currentEndCoor, translationIdentity);
+    dispatch(changedSelectedRangeEnd(newCoor));
   }
 };
 
-export const tableKeyShiftDown = () => (dispatch, getState) => {
-  const sheet = getState().getIn(['sheet']);
-  if (sheet.get('editMode') === 'quick') {
-    dispatch(committedEditValue());
-  } else if (sheet.get('editMode') === 'none') {
-    const newEndCoor = translateCoor(sheet.getIn(['selectedRange', 1]).toJS(), [1, 0]);
-    dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), newEndCoor));
-  }
+export const tableKeyShiftUp = () => dispatch => {
+  dispatch(tableKeyShiftArrow('up'));
 };
 
-export const tableKeyShiftLeft = () => (dispatch, getState) => {
-  const sheet = getState().getIn(['sheet']);
-  if (sheet.get('editMode') === 'quick') {
-    dispatch(committedEditValue());
-  } else if (sheet.get('editMode') === 'none') {
-    const newEndCoor = translateCoor(sheet.getIn(['selectedRange', 1]).toJS(), [0, -1]);
-    dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), newEndCoor));
-  }
+export const tableKeyShiftDown = () => dispatch => {
+  dispatch(tableKeyShiftArrow('down'));
 };
 
-export const tableKeyShiftRight = () => (dispatch, getState) => {
-  const sheet = getState().getIn(['sheet']);
-  if (sheet.get('editMode') === 'quick') {
-    dispatch(committedEditValue());
-  } else if (sheet.get('editMode') === 'none') {
-    const newEndCoor = translateCoor(sheet.getIn(['selectedRange', 1]).toJS(), [0, 1]);
-    dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), newEndCoor));
-  }
+export const tableKeyShiftLeft = () => dispatch => {
+  dispatch(tableKeyShiftArrow('left'));
+};
+
+export const tableKeyShiftRight = () => dispatch => {
+  dispatch(tableKeyShiftArrow('right'));
 };
 
 export const tableKeyOther = () => (dispatch, getState) => {
