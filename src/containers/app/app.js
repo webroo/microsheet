@@ -53,8 +53,8 @@ const mapDispatchToProps = {
 
   tableKeyOther: sheetThunks.tableKeyOther,
 
-  updatedInputCellValue: sheetActions.updatedInputCellValue,
-  updatedInputCellCaretPos: sheetActions.updatedInputCellCaretPos,
+  updatedEditValue: sheetActions.updatedEditValue,
+  updatedEditValueCaretPos: sheetActions.updatedEditValueCaretPos,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

@@ -47,8 +47,8 @@ export const startedEditingCell = (mode, coor) => ({type: 'STARTED_EDITING_CELL'
 export const committedEditValue = () => ({type: 'COMMITTED_EDIT_VALUE'});
 export const discardedEditValue = () => ({type: 'DISCARDED_EDIT_VALUE'});
 export const deletedRange = range => ({type: 'DELETED_RANGE', range});
-export const updatedInputCellValue = value => ({type: 'UPDATED_INPUT_CELL_VALUE', value});
-export const updatedInputCellCaretPos = pos => ({type: 'UPDATED_INPUT_CELL_CARET_POS', pos});
+export const updatedEditValue = value => ({type: 'UPDATED_EDIT_VALUE', value});
+export const updatedEditValueCaretPos = pos => ({type: 'UPDATED_EDIT_VALUE_CARET_POS', pos});
 
 function setBasicRange(state, range) {
   const maxRows = state.get('data').size - 1;
@@ -155,7 +155,7 @@ export const actionHandlers = {
         .set('formulaValueInsertPos', newState.get('editValueCaretPos'));
     }
 
-    return setSelectedRange(state, mode, [coor, coor])
+    return setSelectedRange(newState, mode, [coor, coor])
       .set('isSelectingRange', true)
       .set('selectionMode', mode);
   },
@@ -167,13 +167,9 @@ export const actionHandlers = {
       let data = newState.get('data');
       data = sheetUtils.autofillSheet(data, newState.get('selectedRange').toJS());
       data = sheetUtils.computeSheet(data);
-      newState = newState
-        .set('data', data)
-        .set('selectionMode', 'none')
-        .set('selectedRange', Immutable.fromJS([
-          newState.get('primarySelectedCoor').toJS(),
-          newState.getIn(['selectedRange', 1]).toJS(),
-        ]));
+      // Swap the autofill range over to a basic range so the filled cells are highlighted
+      newState = setBasicRange(state, newState.get('selectedRange').toJS())
+        .set('data', data);
     }
 
     return newState;
@@ -233,15 +229,15 @@ export const actionHandlers = {
     return state.set('data', data);
   },
 
-  UPDATED_INPUT_CELL_VALUE(state, action) {
+  UPDATED_EDIT_VALUE(state, {value}) {
     return state
-      .set('editValue', action.value)
+      .set('editValue', value)
       .set('isEditValueDirty', true);
   },
 
-  UPDATED_INPUT_CELL_CARET_POS(state, action) {
+  UPDATED_EDIT_VALUE_CARET_POS(state, {pos}) {
     return state
-      .set('editValueCaretPos', action.pos)
+      .set('editValueCaretPos', pos)
       .set('isEditValueDirty', true);
   },
 };

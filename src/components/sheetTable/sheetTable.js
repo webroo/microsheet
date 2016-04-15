@@ -127,8 +127,8 @@ class SheetTable extends React.Component {
                         cellDoubleClick={props.cellDoubleClick}
                         autofillMouseDown={props.autofillMouseDown}
                         autofillMouseUp={props.autofillMouseUp}
-                        updatedInputCellValue={props.updatedInputCellValue}
-                        updatedInputCellCaretPos={props.updatedInputCellCaretPos}
+                        updatedEditValue={props.updatedEditValue}
+                        updatedEditValueCaretPos={props.updatedEditValueCaretPos}
                       />
                     );
                   })
