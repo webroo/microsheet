@@ -38,9 +38,11 @@ const initialState = Immutable.fromJS({
 });
 
 export const changedPrimarySelectedCoor = coor => ({type: 'CHANGED_PRIMARY_SELECTED_COOR', coor});
-export const startedSelectingRange = mode => ({type: 'STARTED_SELECTING_RANGE', mode});
+export const startedSelectingRange = (mode, coor) => ({type: 'STARTED_SELECTING_RANGE', mode, coor});
 export const stoppedSelectingRange = () => ({type: 'STOPPED_SELECTING_RANGE'});
 export const changedSelectedRange = (mode, range) => ({type: 'CHANGED_SELECTED_RANGE', mode, range});
+export const changedSelectedRangeStart = (mode, coor) => ({type: 'CHANGED_SELECTED_RANGE_START', mode, coor});
+export const changedSelectedRangeEnd = (mode, coor) => ({type: 'CHANGED_SELECTED_RANGE_END', mode, coor});
 export const startedEditingCell = (mode, coor) => ({type: 'STARTED_EDITING_CELL', mode, coor});
 export const committedEditValue = () => ({type: 'COMMITTED_EDIT_VALUE'});
 export const discardedEditValue = () => ({type: 'DISCARDED_EDIT_VALUE'});
@@ -98,6 +100,17 @@ function setFormulaRange(state, range) {
     .set('selectedRange', Immutable.fromJS(range));
 }
 
+function setSelectedRange(state, mode, range) {
+  if (mode === 'basic') {
+    return setBasicRange(state, range);
+  } else if (mode === 'autofill') {
+    return setAutofillRange(state, range);
+  } else if (mode === 'formula') {
+    return setFormulaRange(state, range);
+  }
+  return state;
+}
+
 function setCellValue(state, coor, value) {
   let data = state.get('data');
   let newValue = value;
@@ -132,7 +145,7 @@ export const actionHandlers = {
       .set('primarySelectedCoor', Immutable.fromJS(newCoor));
   },
 
-  STARTED_SELECTING_RANGE(state, {mode}) {
+  STARTED_SELECTING_RANGE(state, {mode, coor}) {
     let newState = state;
 
     if (mode === 'formula') {
@@ -142,7 +155,7 @@ export const actionHandlers = {
         .set('formulaValueInsertPos', newState.get('editValueCaretPos'));
     }
 
-    return newState
+    return setSelectedRange(state, mode, [coor, coor])
       .set('isSelectingRange', true)
       .set('selectionMode', mode);
   },
@@ -167,14 +180,21 @@ export const actionHandlers = {
   },
 
   CHANGED_SELECTED_RANGE(state, {mode, range}) {
-    if (mode === 'basic') {
-      return setBasicRange(state, range);
-    } else if (mode === 'autofill') {
-      return setAutofillRange(state, range);
-    } else if (mode === 'formula') {
-      return setFormulaRange(state, range);
-    }
-    return state;
+    return setSelectedRange(state, mode, range);
+  },
+
+  CHANGED_SELECTED_RANGE_START(state, {mode, coor}) {
+    return setSelectedRange(state, mode, [
+      coor,
+      state.getIn(['selectedRange', 1]).toJS(),
+    ]);
+  },
+
+  CHANGED_SELECTED_RANGE_END(state, {mode, coor}) {
+    return setSelectedRange(state, mode, [
+      state.getIn(['selectedRange', 0]).toJS(),
+      coor,
+    ]);
   },
 
   STARTED_EDITING_CELL(state, {mode, coor}) {

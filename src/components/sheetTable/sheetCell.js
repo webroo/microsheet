@@ -102,7 +102,7 @@ const SheetCell = props => {
               className={styles.autofillHandle}
               onMouseDown={event => {
                 event.stopPropagation();
-                props.autofillMouseDown();
+                props.autofillMouseDown(props.cellCoor);
               }}
               onMouseUp={event => {
                 event.stopPropagation();

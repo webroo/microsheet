@@ -2,7 +2,7 @@ import {
   changedPrimarySelectedCoor,
   startedSelectingRange,
   stoppedSelectingRange,
-  changedSelectedRange,
+  changedSelectedRangeEnd,
   startedEditingCell,
   committedEditValue,
   discardedEditValue,
@@ -15,30 +15,19 @@ export const cellMouseDown = coor => (dispatch, getState) => {
   const sheet = getState().getIn(['sheet']);
   if (sheet.get('editMode') !== 'none') {
     if (isFormula(sheet.get('editValue'))) {
-      // TODO: swapping the two lines below breaks the formula cell ref insertion code
-      // this because the edit value is only copied in startedSelectingRange()
-      // Perhaps change to: startSelectingRange(mode, startCoor) and changeSelectedRangeEnd(coor)
-      dispatch(startedSelectingRange('formula'));
-      dispatch(changedSelectedRange('formula', [coor, coor]));
+      dispatch(startedSelectingRange('formula', coor));
       return;
     }
     dispatch(committedEditValue());
   }
-  dispatch(startedSelectingRange('basic'));
+  dispatch(startedSelectingRange('basic', coor));
   dispatch(changedPrimarySelectedCoor(coor));
 };
 
 export const cellMouseOver = coor => (dispatch, getState) => {
   const sheet = getState().getIn(['sheet']);
   if (sheet.get('isSelectingRange')) {
-    // TODO: changing just the end coor of a range is duplicated everywhere
-    dispatch(changedSelectedRange(
-      sheet.get('selectionMode'),
-      [
-        sheet.getIn(['selectedRange', 0]).toJS(),
-        coor,
-      ]
-    ));
+    dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), coor));
   }
 };
 
@@ -47,22 +36,16 @@ export const cellMouseUp = () => dispatch => {
 };
 
 export const cellShiftMouseDown = coor => (dispatch, getState) => {
-  // TODO: changing just the end coor of a range is duplicated everywhere
-  dispatch(changedSelectedRange(
-    getState().getIn(['sheet', 'selectionMode']),
-    [
-      getState().getIn(['sheet', 'selectedRange', 0]).toJS(),
-      coor,
-    ]
-  ));
+  const sheet = getState().getIn(['sheet']);
+  dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), coor));
 };
 
 export const cellDoubleClick = coor => dispatch => {
   dispatch(startedEditingCell('full', coor));
 };
 
-export const autofillMouseDown = () => dispatch => {
-  dispatch(startedSelectingRange('autofill'));
+export const autofillMouseDown = coor => dispatch => {
+  dispatch(startedSelectingRange('autofill', coor));
 };
 
 export const autofillMouseUp = () => dispatch => {
@@ -185,15 +168,8 @@ export const tableKeyShiftUp = () => (dispatch, getState) => {
   if (sheet.get('editMode') === 'quick') {
     dispatch(committedEditValue());
   } else if (sheet.get('editMode') === 'none') {
-    // TODO: changing just the end coor of a range is duplicated everywhere
     const newEndCoor = translateCoor(sheet.getIn(['selectedRange', 1]).toJS(), [-1, 0]);
-    dispatch(changedSelectedRange(
-      sheet.get('selectionMode'),
-      [
-        sheet.getIn(['selectedRange', 0]).toJS(),
-        newEndCoor,
-      ]
-    ));
+    dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), newEndCoor));
   }
 };
 
@@ -202,15 +178,8 @@ export const tableKeyShiftDown = () => (dispatch, getState) => {
   if (sheet.get('editMode') === 'quick') {
     dispatch(committedEditValue());
   } else if (sheet.get('editMode') === 'none') {
-    // TODO: changing just the end coor of a range is duplicated everywhere
     const newEndCoor = translateCoor(sheet.getIn(['selectedRange', 1]).toJS(), [1, 0]);
-    dispatch(changedSelectedRange(
-      sheet.get('selectionMode'),
-      [
-        sheet.getIn(['selectedRange', 0]).toJS(),
-        newEndCoor,
-      ]
-    ));
+    dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), newEndCoor));
   }
 };
 
@@ -219,15 +188,8 @@ export const tableKeyShiftLeft = () => (dispatch, getState) => {
   if (sheet.get('editMode') === 'quick') {
     dispatch(committedEditValue());
   } else if (sheet.get('editMode') === 'none') {
-    // TODO: changing just the end coor of a range is duplicated everywhere
     const newEndCoor = translateCoor(sheet.getIn(['selectedRange', 1]).toJS(), [0, -1]);
-    dispatch(changedSelectedRange(
-      sheet.get('selectionMode'),
-      [
-        sheet.getIn(['selectedRange', 0]).toJS(),
-        newEndCoor,
-      ]
-    ));
+    dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), newEndCoor));
   }
 };
 
@@ -236,15 +198,8 @@ export const tableKeyShiftRight = () => (dispatch, getState) => {
   if (sheet.get('editMode') === 'quick') {
     dispatch(committedEditValue());
   } else if (sheet.get('editMode') === 'none') {
-    // TODO: changing just the end coor of a range is duplicated everywhere
     const newEndCoor = translateCoor(sheet.getIn(['selectedRange', 1]).toJS(), [0, 1]);
-    dispatch(changedSelectedRange(
-      sheet.get('selectionMode'),
-      [
-        sheet.getIn(['selectedRange', 0]).toJS(),
-        newEndCoor,
-      ]
-    ));
+    dispatch(changedSelectedRangeEnd(sheet.get('selectionMode'), newEndCoor));
   }
 };
 
