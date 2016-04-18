@@ -19,9 +19,9 @@ const App = props => {
 };
 
 const mapStateToProps = state => ({
-  sheet: state.get('sheet'),
-  rowHeaderData: rowHeaderSelector(state.get('sheet')),
-  colHeaderData: colHeaderSelector(state.get('sheet')),
+  sheet: state.present.get('sheet'),
+  rowHeaderData: rowHeaderSelector(state.present.get('sheet')),
+  colHeaderData: colHeaderSelector(state.present.get('sheet')),
 });
 
 const mapDispatchToProps = {
@@ -63,6 +63,9 @@ const mapDispatchToProps = {
   tableKeyCmdShiftRight: sheetThunks.tableKeyCmdShiftRight,
 
   tableKeyOther: sheetThunks.tableKeyOther,
+
+  tableUndo: sheetThunks.tableUndo,
+  tableRedo: sheetThunks.tableRedo,
 
   updatedEditValue: sheetActions.updatedEditValue,
   updatedEditValueCaretPos: sheetActions.updatedEditValueCaretPos,

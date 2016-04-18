@@ -37,6 +37,9 @@ const initialState = Immutable.fromJS({
   formulaValueInsertPos: 0,
 });
 
+export const COMMITTED_EDIT_VALUE = 'COMMITTED_EDIT_VALUE';
+export const STARTED_EDITING_CELL = 'STARTED_EDITING_CELL';
+
 export const changedPrimarySelectedCoor = coor => ({type: 'CHANGED_PRIMARY_SELECTED_COOR', coor});
 export const startedSelectingRange = (mode, coor) => ({type: 'STARTED_SELECTING_RANGE', mode, coor});
 export const stoppedSelectingRange = () => ({type: 'STOPPED_SELECTING_RANGE'});

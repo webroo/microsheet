@@ -95,6 +95,10 @@ class SheetTable extends React.Component {
           } else if (event.keyCode === 65 && (event.metaKey || event.ctrlKey)) {
             event.preventDefault();
             props.tableKeyCmdA();
+          } else if (event.keyCode === 90 && event.shiftKey && (event.metaKey || event.ctrlKey)) {
+            props.tableRedo();
+          } else if (event.keyCode === 90 && (event.metaKey || event.ctrlKey)) {
+            props.tableUndo();
           } else if (
             event.key !== 'Control' &&
             event.key !== 'Alt' &&
