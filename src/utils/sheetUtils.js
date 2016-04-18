@@ -257,3 +257,9 @@ export const isLeftEdgeOfRange = (range, coor) => (
 export const isRightEdgeOfRange = (range, coor) => (
   isCoorInRange(coor, range) && coor[1] === range[1][1]
 );
+
+export const getSheetExtentRange = sheetData => {
+  const maxRows = sheetData.size - 1;
+  const maxCols = sheetData.get(0).size - 1;
+  return [[0, 0], [maxRows, maxCols]];
+};

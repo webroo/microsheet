@@ -2,6 +2,7 @@ import {
   changedPrimarySelectedCoor,
   startedSelectingRange,
   stoppedSelectingRange,
+  changedSelectedRange,
   changedSelectedRangeEnd,
   startedEditingCell,
   committedEditValue,
@@ -9,7 +10,12 @@ import {
   deletedRange,
 } from './sheetReducer';
 
-import {translateCoor, translationIdentities, isFormula} from '../utils/sheetUtils';
+import {
+  translateCoor,
+  translationIdentities,
+  isFormula,
+  getSheetExtentRange,
+} from '../utils/sheetUtils';
 
 export const cellMouseDown = coor => (dispatch, getState) => {
   const sheet = getState().getIn(['sheet']);
@@ -91,15 +97,16 @@ export const tableKeyShiftTab = () => dispatch => {
   dispatch(tableKeyTab(true));
 };
 
-export const tableKeyEsc = () => dispatch => {
-  dispatch(discardedEditValue());
+export const tableKeyEsc = () => (dispatch, getState) => {
+  const sheet = getState().getIn(['sheet']);
+  if (sheet.get('editMode') !== 'none') {
+    dispatch(discardedEditValue());
+  }
 };
 
 export const tableKeyDelete = () => (dispatch, getState) => {
   const sheet = getState().getIn(['sheet']);
-  if (sheet.get('editMode') === 'none') {
-    dispatch(deletedRange(sheet.get('selectedRange').toJS()));
-  }
+  dispatch(deletedRange(sheet.get('selectedRange').toJS()));
 };
 
 export const tableKeyArrow = direction => (dispatch, getState) => {
@@ -159,9 +166,67 @@ export const tableKeyShiftRight = () => dispatch => {
   dispatch(tableKeyShiftArrow('right'));
 };
 
-export const tableKeyOther = () => (dispatch, getState) => {
+export const tableKeyCmdA = () => (dispatch, getState) => {
   const sheet = getState().getIn(['sheet']);
   if (sheet.get('editMode') === 'none') {
-    dispatch(startedEditingCell('quick', sheet.get('primarySelectedCoor').toJS()));
+    const extent = getSheetExtentRange(sheet.get('data'));
+    dispatch(changedSelectedRange('basic', extent));
   }
+};
+
+export const tableKeyCmdUp = () => (dispatch, getState) => {
+  const sheet = getState().getIn(['sheet']);
+  const newCoor = sheet.get('primarySelectedCoor').set(0, 0).toJS();
+  dispatch(changedPrimarySelectedCoor(newCoor));
+};
+
+export const tableKeyCmdDown = () => (dispatch, getState) => {
+  const sheet = getState().getIn(['sheet']);
+  const extent = getSheetExtentRange(sheet.get('data'));
+  const newCoor = sheet.get('primarySelectedCoor').set(0, extent[1][0]).toJS();
+  dispatch(changedPrimarySelectedCoor(newCoor));
+};
+
+export const tableKeyCmdLeft = () => (dispatch, getState) => {
+  const sheet = getState().getIn(['sheet']);
+  const newCoor = sheet.get('primarySelectedCoor').set(1, 0).toJS();
+  dispatch(changedPrimarySelectedCoor(newCoor));
+};
+
+export const tableKeyCmdRight = () => (dispatch, getState) => {
+  const sheet = getState().getIn(['sheet']);
+  const extent = getSheetExtentRange(sheet.get('data'));
+  const newCoor = sheet.get('primarySelectedCoor').set(1, extent[1][1]).toJS();
+  dispatch(changedPrimarySelectedCoor(newCoor));
+};
+
+export const tableKeyCmdShiftUp = () => (dispatch, getState) => {
+  const sheet = getState().getIn(['sheet']);
+  const newEndCoor = sheet.getIn(['selectedRange', 1]).set(0, 0).toJS();
+  dispatch(changedSelectedRangeEnd(newEndCoor));
+};
+
+export const tableKeyCmdShiftDown = () => (dispatch, getState) => {
+  const sheet = getState().getIn(['sheet']);
+  const extent = getSheetExtentRange(sheet.get('data'));
+  const newEndCoor = sheet.getIn(['selectedRange', 1]).set(0, extent[1][0]).toJS();
+  dispatch(changedSelectedRangeEnd(newEndCoor));
+};
+
+export const tableKeyCmdShiftLeft = () => (dispatch, getState) => {
+  const sheet = getState().getIn(['sheet']);
+  const newEndCoor = sheet.getIn(['selectedRange', 1]).set(1, 0).toJS();
+  dispatch(changedSelectedRangeEnd(newEndCoor));
+};
+
+export const tableKeyCmdShiftRight = () => (dispatch, getState) => {
+  const sheet = getState().getIn(['sheet']);
+  const extent = getSheetExtentRange(sheet.get('data'));
+  const newEndCoor = sheet.getIn(['selectedRange', 1]).set(1, extent[1][1]).toJS();
+  dispatch(changedSelectedRangeEnd(newEndCoor));
+};
+
+export const tableKeyOther = () => (dispatch, getState) => {
+  const sheet = getState().getIn(['sheet']);
+  dispatch(startedEditingCell('quick', sheet.get('primarySelectedCoor').toJS()));
 };

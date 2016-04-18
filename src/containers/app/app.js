@@ -51,6 +51,17 @@ const mapDispatchToProps = {
   tableKeyShiftLeft: sheetThunks.tableKeyShiftLeft,
   tableKeyShiftRight: sheetThunks.tableKeyShiftRight,
 
+  tableKeyCmdA: sheetThunks.tableKeyCmdA,
+
+  tableKeyCmdUp: sheetThunks.tableKeyCmdUp,
+  tableKeyCmdDown: sheetThunks.tableKeyCmdDown,
+  tableKeyCmdLeft: sheetThunks.tableKeyCmdLeft,
+  tableKeyCmdRight: sheetThunks.tableKeyCmdRight,
+  tableKeyCmdShiftUp: sheetThunks.tableKeyCmdShiftUp,
+  tableKeyCmdShiftDown: sheetThunks.tableKeyCmdShiftDown,
+  tableKeyCmdShiftLeft: sheetThunks.tableKeyCmdShiftLeft,
+  tableKeyCmdShiftRight: sheetThunks.tableKeyCmdShiftRight,
+
   tableKeyOther: sheetThunks.tableKeyOther,
 
   updatedEditValue: sheetActions.updatedEditValue,

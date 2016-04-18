@@ -51,29 +51,50 @@ class SheetTable extends React.Component {
           } else if (event.key === 'Escape') {
             props.tableKeyEsc();
           } else if (event.key === 'ArrowUp') {
-            if (event.shiftKey) {
+            if ((event.metaKey || event.ctrlKey) && event.shiftKey) {
+              props.tableKeyCmdShiftUp();
+            } else if (event.metaKey || event.ctrlKey) {
+              props.tableKeyCmdUp();
+            } else if (event.shiftKey) {
               props.tableKeyShiftUp();
             } else {
               props.tableKeyUp();
             }
           } else if (event.key === 'ArrowDown') {
-            if (event.shiftKey) {
+            if ((event.metaKey || event.ctrlKey) && event.shiftKey) {
+              props.tableKeyCmdShiftDown();
+            } else if (event.metaKey || event.ctrlKey) {
+              props.tableKeyCmdDown();
+            } else if (event.shiftKey) {
               props.tableKeyShiftDown();
             } else {
               props.tableKeyDown();
             }
           } else if (event.key === 'ArrowLeft') {
-            if (event.shiftKey) {
+            if ((event.metaKey || event.ctrlKey) && event.shiftKey) {
+              props.tableKeyCmdShiftLeft();
+            } else if (event.metaKey || event.ctrlKey) {
+              event.preventDefault();
+              props.tableKeyCmdLeft();
+            } else if (event.shiftKey) {
               props.tableKeyShiftLeft();
             } else {
               props.tableKeyLeft();
             }
           } else if (event.key === 'ArrowRight') {
-            if (event.shiftKey) {
+            if ((event.metaKey || event.ctrlKey) && event.shiftKey) {
+              props.tableKeyCmdShiftRight();
+            } else if (event.metaKey || event.ctrlKey) {
+              event.preventDefault();
+              props.tableKeyCmdRight();
+            } else if (event.shiftKey) {
               props.tableKeyShiftRight();
             } else {
               props.tableKeyRight();
             }
+          } else if (event.keyCode === 65 && (event.metaKey || event.ctrlKey)) {
+            event.preventDefault();
+            props.tableKeyCmdA();
           } else if (
             event.key !== 'Control' &&
             event.key !== 'Alt' &&

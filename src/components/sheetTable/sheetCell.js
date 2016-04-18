@@ -51,9 +51,16 @@ const SheetCell = props => {
           }}
           // onBlur={event => {}}
           onKeyDown={event => {
-            if (event.key === 'Backspace' || event.key === 'Delete') {
-              // This prevents the table above from receiving the delete key event, which would
-              // attempt to delete the cell
+            // This only allows the following keys to bubble up to the table above
+            if (
+              event.key !== 'ArrowUp' &&
+              event.key !== 'ArrowDown' &&
+              event.key !== 'ArrowLeft' &&
+              event.key !== 'ArrowRight' &&
+              event.key !== 'Enter' &&
+              event.key !== 'Tab' &&
+              event.key !== 'Escape'
+            ) {
               event.stopPropagation();
             }
           }}

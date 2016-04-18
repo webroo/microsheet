@@ -51,9 +51,8 @@ export const updatedEditValue = value => ({type: 'UPDATED_EDIT_VALUE', value});
 export const updatedEditValueCaretPos = pos => ({type: 'UPDATED_EDIT_VALUE_CARET_POS', pos});
 
 function setBasicRange(state, range) {
-  const maxRows = state.get('data').size - 1;
-  const maxCols = state.getIn(['data', 0]).size - 1;
-  const clampedRange = sheetUtils.clampRangeToRange(range, [[0, 0], [maxRows, maxCols]]);
+  const extent = sheetUtils.getSheetExtentRange(state.get('data'));
+  const clampedRange = sheetUtils.clampRangeToRange(range, extent);
 
   return state
     .set('selectionMode', 'basic')
@@ -138,9 +137,8 @@ function stopEditing(state) {
 
 export const actionHandlers = {
   CHANGED_PRIMARY_SELECTED_COOR(state, {coor}) {
-    const maxRows = state.get('data').size - 1;
-    const maxCols = state.getIn(['data', 0]).size - 1;
-    const newCoor = sheetUtils.clampCoorToRange(coor, [[0, 0], [maxRows, maxCols]]);
+    const extent = sheetUtils.getSheetExtentRange(state.get('data'));
+    const newCoor = sheetUtils.clampCoorToRange(coor, extent);
     return setBasicRange(state, [newCoor, newCoor])
       .set('primarySelectedCoor', Immutable.fromJS(newCoor));
   },
