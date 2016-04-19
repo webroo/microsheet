@@ -55,7 +55,7 @@ export const updatedEditValue = value => ({type: 'UPDATED_EDIT_VALUE', value});
 export const updatedEditValueCaretPos = pos => ({type: 'UPDATED_EDIT_VALUE_CARET_POS', pos});
 
 function setBasicRange(state, range) {
-  const extent = sheetUtils.getSheetExtentRange(state.get('data'));
+  const extent = sheetUtils.getSheetExtent(state.get('data'));
   const clampedRange = coordinateUtils.clampRangeToRange(range, extent);
 
   return state
@@ -120,8 +120,8 @@ function setCellValue(state, coor, value) {
 
   if (sheetUtils.isFormula(value)) {
     newValue = sheetUtils.capitalizeExpression(value);
-  } else if (sheetUtils.isNumber(value)) {
-    newValue = sheetUtils.coerceStringToNumber(value);
+  } else if (sheetUtils.canCoerceToNumber(value)) {
+    newValue = sheetUtils.coerceToNumber(value);
   } else {
     newValue = value.trim();
   }
@@ -141,7 +141,7 @@ function stopEditing(state) {
 
 export const actionHandlers = {
   CHANGED_PRIMARY_SELECTED_COOR(state, {coor}) {
-    const extent = sheetUtils.getSheetExtentRange(state.get('data'));
+    const extent = sheetUtils.getSheetExtent(state.get('data'));
     const newCoor = coordinateUtils.clampCoorToRange(coor, extent);
     return setBasicRange(state, [newCoor, newCoor])
       .set('primarySelectedCoor', Immutable.fromJS(newCoor));

@@ -1,6 +1,6 @@
 import {createSelector} from 'reselect';
 
-import {ALPHABET} from '../utils/sheetUtils';
+import {ALPHABET} from '../utils/coordinateUtils';
 
 const sheetSelector = sheet => sheet;
 

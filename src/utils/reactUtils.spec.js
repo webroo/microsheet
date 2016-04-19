@@ -3,7 +3,7 @@ import {expect} from 'chai';
 import * as reactUtils from './reactUtils';
 
 describe('reactUtils', () => {
-  describe('.classNames()', () => {
+  describe('classNames()', () => {
     const {classNames} = reactUtils;
 
     it('should return an empty string if the object is empty', () => {

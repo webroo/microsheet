@@ -4,7 +4,7 @@ import {spy} from 'sinon';
 import {createReducer} from './reduxUtils';
 
 describe('reduxUtils', () => {
-  describe('.createReducer()', () => {
+  describe('createReducer()', () => {
     const initialState = 1;
     const actionHandlers = {
       FOO: () => {},

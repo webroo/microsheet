@@ -3,16 +3,15 @@ import styles from './sheetTable.css';
 import React, {PropTypes} from 'react';
 
 import {classNames} from '../../utils/reactUtils';
+import {canCoerceToNumber, isFormula} from '../../utils/sheetUtils';
 import {
-  isNumber,
-  isFormula,
   absoluteRange,
   rangeSize,
   isCoorAtTopEdgeOfRange,
   isCoorAtBottomEdgeOfRange,
   isCoorAtLeftEdgeOfRange,
   isCoorAtRightEdgeOfRange,
-} from '../../utils/sheetUtils';
+} from '../../utils/coordinateUtils';
 
 const SheetCell = props => {
   const isAutofilling = props.selectionMode === 'autofill' && props.isInRange;
@@ -24,7 +23,7 @@ const SheetCell = props => {
     [styles.selected]: props.isPrimaryCell,
     [styles.editing]: props.isEditing,
     [styles.rangeSelected]: props.isInRange && rangeSize(props.selectedRange.toJS()) > 1,
-    [styles.number]: isNumber(props.cellData.get('val')),
+    [styles.number]: canCoerceToNumber(props.cellData.get('val')),
     [styles.insertionSelected]: isInsertingFormulaRange,
     [styles.autofillSelected]: isAutofilling,
     [styles.topEdge]: isCoorAtTopEdgeOfRange(props.cellCoor, currentSelectionRange),
@@ -39,7 +38,7 @@ const SheetCell = props => {
         <input
           type="text"
           className={classNames({
-            [styles.number]: isNumber(props.cellData.get('val')),
+            [styles.number]: canCoerceToNumber(props.cellData.get('val')),
             [styles.formula]: isFormula(props.cellData.get('raw')),
           })}
           value={props.editValue}

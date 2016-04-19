@@ -2,7 +2,7 @@ import styles from './sheetTable.css';
 
 import React, {PropTypes} from 'react';
 
-import {isMatchingCoors, isCoorInRange, absoluteRange} from '../../utils/sheetUtils';
+import {isMatchingCoors, isCoorInRange, absoluteRange} from '../../utils/coordinateUtils';
 import SheetCell from './sheetCell';
 
 class SheetTable extends React.Component {

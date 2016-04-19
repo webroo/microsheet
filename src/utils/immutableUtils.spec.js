@@ -5,7 +5,7 @@ import {spy} from 'sinon';
 import {combineImmutableReducers} from './immutableUtils';
 
 describe('immutableUtils', () => {
-  describe('.combineImmutableReducers()', () => {
+  describe('combineImmutableReducers()', () => {
     let reducer1;
     let reducer2;
     let combinedReducer;

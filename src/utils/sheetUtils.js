@@ -1,22 +1,55 @@
 import {ALPHABET, expandAddrRange, getAddrFromCoor, absoluteRange} from './coordinateUtils';
 
-export const isNumber = n => !isNaN(parseFloat(n)) && isFinite(n);
+/**
+ * Returns true if the value can be coerced into a Number
+ * @param  {*}       n Any value, but usually a string
+ * @return {Boolean}
+ */
+export const canCoerceToNumber = n => !isNaN(parseFloat(n)) && isFinite(n);
 
-export const coerceStringToNumber = n => (isNumber(n) ? parseFloat(n) : n);
+/**
+ * Coerces the value into a Number
+ * @param  {*}      n Any value, but usually a string
+ * @return {Number}
+ */
+export const coerceToNumber = n => (canCoerceToNumber(n) ? parseFloat(n) : n);
 
+/**
+ * Returns true if the string value is a formula (e.g. starts with a `=` symbol)
+ * @param  {String} value String value
+ * @return {Boolean}
+ */
 export const isFormula = value => (
   typeof value === 'string' && value.charAt(0) === '='
 );
 
-export const isValidFormulaSymbol = char => {
+/**
+ * Returns true if the character is allowed to have a cell ref inserted after it.
+ * Used when inserting cell refs into formulas.
+ * @param  {String}  char String with a length of 1
+ * @return {Boolean}
+ */
+export const canInsertCellRefAfterChar = char => {
   return /[+\-*/()=,]/.test(char);
 };
 
+/**
+ * Converts any formula function names (SUM, AVERAGE) and cell addresses (A1, B2) found within the
+ * string to uppercase.
+ * @param  {String} expr The string expression, e.g. '=sum(a1:b2)*100'
+ * @return {String}      The capitalized string, e.g. '=SUM(A1:B2)*100'
+ */
 export const capitalizeExpression = expr => (
   // Only capitalize formula function names and cell addresses (eg: a1, b22, etc)
   expr.replace(/sum|average|[a-z]\d{1,2}/gi, match => match.toUpperCase())
 );
 
+/**
+ * Sanitizes the expression by removing any sequence of characters that are not determined to be
+ * valid in a formula.
+ * @param  {String} expr The string expression, e.g. '=A1+20*alert("hello")'
+ * @return {String}      The sanitized expression, e.g. '=A1+20*()'
+ */
 export const sanitizeExpression = expr => {
   return expr
     // Remove anything that isn't a valid formula symbol or uppercase A-Z character. All valid
@@ -29,6 +62,12 @@ export const sanitizeExpression = expr => {
     .replace(/[A-Z]\d{1,2}:[A-Z]\d{1,2}/g, v => expandAddrRange(v));
 };
 
+/**
+ * Computes the `raw` properties in the sheet and sets the `val` properties. Non-formula raw values
+ * are copied over verbatim, and formulas are computed.
+ * @param  {Immutable.List} sheet Sheet data
+ * @return {Immutable.List}       Computed sheet data
+ */
 export const computeSheet = sheet => {
   // Reduces the nested Immutable List down to an object map where the keys are cell addresses.
   // Cell addresses are prefixed with an underscore symbol. This allows us to create non-underscore
@@ -109,6 +148,13 @@ export const computeSheet = sheet => {
   return newSheet;
 };
 
+/**
+ * Autofills the given range on the sheet. Non-formula values are copied verbatim, and forumlas
+ * are modified so that cell references are sequentially transformed.
+ * @param  {Immutable.List} sheet Sheet data
+ * @param  {Array}          range Autofill range, with the first range coor acting as the source
+ * @return {Immutable.List}       Autofilled sheet data
+ */
 export const autofillSheet = (sheet, range) => {
   const originCoor = range[0];
   const originValue = sheet.getIn([...range[0], 'raw']);
@@ -141,7 +187,12 @@ export const autofillSheet = (sheet, range) => {
   return newSheet;
 };
 
-export const getSheetExtentRange = sheetData => {
+/**
+ * Returns the size of the sheet as a range, e.g. a 3x3 sheet would be [[0, 0], [2, 2]]
+ * @param  {Immutable.List} sheetData Sheet data
+ * @return {Array}                    Extent as a range
+ */
+export const getSheetExtent = sheetData => {
   const maxRows = sheetData.size - 1;
   const maxCols = sheetData.get(0).size - 1;
   return [[0, 0], [maxRows, maxCols]];

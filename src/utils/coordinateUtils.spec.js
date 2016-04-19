@@ -24,13 +24,13 @@ import {
 } from './coordinateUtils';
 
 describe('coordinateUtils', () => {
-  describe('.createEmptyCoor()', () => {
+  describe('createEmptyCoor()', () => {
     it('should return an empty coor', () => {
       expect(createEmptyCoor()).to.eql([undefined, undefined]);
     });
   });
 
-  describe('.createEmptyRange()', () => {
+  describe('createEmptyRange()', () => {
     it('should return an empty coor', () => {
       expect(createEmptyRange()).to.eql([
         [undefined, undefined],
@@ -39,7 +39,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.isValidCoor()', () => {
+  describe('isValidCoor()', () => {
     it('should return false for a valid coor', () => {
       expect(isValidCoor([0, 0])).to.be.true;
       expect(isValidCoor([1, -1])).to.be.true;
@@ -52,7 +52,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.isValidRange()', () => {
+  describe('isValidRange()', () => {
     it('should return false for a valid range', () => {
       expect(isValidRange([[0, 0], [0, 0]])).to.be.true;
       expect(isValidRange([[1, -1], [1, -1]])).to.be.true;
@@ -76,7 +76,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.isMatchingCoors()', () => {
+  describe('isMatchingCoors()', () => {
     it('should return true for mathcing coordinates', () => {
       expect(isMatchingCoors([0, 0], [0, 0])).to.be.true;
       expect(isMatchingCoors([2, 2], [2, 2])).to.be.true;
@@ -88,7 +88,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.isCoorInRange()', () => {
+  describe('isCoorInRange()', () => {
     it('should return true if the coordinate is within the range', () => {
       expect(isCoorInRange(
         [0, 0],
@@ -114,21 +114,21 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.getAddrFromCoor()', () => {
+  describe('getAddrFromCoor()', () => {
     it('should return an address from a coordinate', () => {
       expect(getAddrFromCoor([0, 0])).to.equal('A1');
       expect(getAddrFromCoor([11, 2])).to.equal('C12');
     });
   });
 
-  describe('.getCoorFromAddr()', () => {
+  describe('getCoorFromAddr()', () => {
     it('should return a coordinate from an address', () => {
       expect(getCoorFromAddr('A1')).to.eql([0, 0]);
       expect(getCoorFromAddr('C12')).to.eql([11, 2]);
     });
   });
 
-  describe('.absoluteRange()', () => {
+  describe('absoluteRange()', () => {
     it('should return a positively oriented range when given a negative range', () => {
       expect(absoluteRange([[2, 2], [0, 0]])).to.eql([[0, 0], [2, 2]]);
     });
@@ -138,7 +138,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.rangeSize()', () => {
+  describe('rangeSize()', () => {
     it('should return the number of cells in a range', () => {
       expect(rangeSize([[0, 0], [0, 0]])).to.equal(1);
       expect(rangeSize([[0, 0], [2, 2]])).to.equal(9);
@@ -149,7 +149,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.getAddrRangeFromCoorRange()', () => {
+  describe('getAddrRangeFromCoorRange()', () => {
     it('should return a single address from a coordinate range with a size of 1', () => {
       expect(getAddrRangeFromCoorRange([[0, 0], [0, 0]])).to.equal('A1');
       expect(getAddrRangeFromCoorRange([[2, 2], [2, 2]])).to.equal('C3');
@@ -161,7 +161,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.getCoorRangeFromAddrRange()', () => {
+  describe('getCoorRangeFromAddrRange()', () => {
     it('should return a coordinate range from a single address', () => {
       expect(getCoorRangeFromAddrRange('A1')).to.eql([[0, 0], [0, 0]]);
       expect(getCoorRangeFromAddrRange('C3')).to.eql([[2, 2], [2, 2]]);
@@ -173,7 +173,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.clampCoorToRange()', () => {
+  describe('clampCoorToRange()', () => {
     it('should clamp an out-of-bounds coordinate to within the nearest bounds of the range', () => {
       expect(clampCoorToRange(
         [0, 3],
@@ -199,7 +199,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.clampRangeToRange()', () => {
+  describe('clampRangeToRange()', () => {
     it('should clamp an out-of-bounds range to within the nearest bounds of the range', () => {
       expect(clampRangeToRange(
         [[0, 0], [3, 3]],
@@ -225,7 +225,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.expandCoorRange()', () => {
+  describe('expandCoorRange()', () => {
     it('should expand a range into an array of all coordinates inside the range', () => {
       expect(expandCoorRange([[0, 0], [1, 1]]))
         .to.eql([[0, 0], [0, 1], [1, 0], [1, 1]]);
@@ -237,14 +237,14 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.expandAddrRange()', () => {
+  describe('expandAddrRange()', () => {
     it('should expand an address range into a string of all the addresses inside the range', () => {
       expect(expandAddrRange('A1:B2'))
         .to.eql('A1,B1,A2,B2');
     });
   });
 
-  describe('.isCoorAtTopEdgeOfRange()', () => {
+  describe('isCoorAtTopEdgeOfRange()', () => {
     it('should return true if the coordinate is at the top edge of the range', () => {
       expect(isCoorAtTopEdgeOfRange([0, 0], [[0, 0], [2, 2]]))
         .to.be.true;
@@ -261,7 +261,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.isCoorAtBottomEdgeOfRange()', () => {
+  describe('isCoorAtBottomEdgeOfRange()', () => {
     it('should return true if the coordinate is at the top edge of the range', () => {
       expect(isCoorAtBottomEdgeOfRange([2, 0], [[0, 0], [2, 2]]))
         .to.be.true;
@@ -278,7 +278,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.isCoorAtLeftEdgeOfRange()', () => {
+  describe('isCoorAtLeftEdgeOfRange()', () => {
     it('should return true if the coordinate is at the top edge of the range', () => {
       expect(isCoorAtLeftEdgeOfRange([0, 0], [[0, 0], [2, 2]]))
         .to.be.true;
@@ -295,7 +295,7 @@ describe('coordinateUtils', () => {
     });
   });
 
-  describe('.isCoorAtRightEdgeOfRange()', () => {
+  describe('isCoorAtRightEdgeOfRange()', () => {
     it('should return true if the coordinate is at the top edge of the range', () => {
       expect(isCoorAtRightEdgeOfRange([0, 2], [[0, 0], [2, 2]]))
         .to.be.true;
