@@ -1,172 +1,350 @@
 import Immutable from 'immutable';
 import {expect} from 'chai';
 
-import sheetReducer, * as sheetReducerActions from './sheetReducer';
-
-describe('updateCellValue action', () => {
-  const {UPDATE_CELL_VALUE, updateCellValue} = sheetReducerActions;
-
-  it('should return an object with a coordinate and new value', () => {
-    const action = updateCellValue([1, 1], 'foo');
-    expect(action).to.eql({
-      type: UPDATE_CELL_VALUE,
-      coor: [1, 1],
-      value: 'foo',
-    });
-  });
-});
-
-describe('changeEditingCoor action', () => {
-  const {CHANGE_EDITING_COOR, changeEditingCoor} = sheetReducerActions;
-
-  it('should return an object with a coordinate and new value', () => {
-    const action = changeEditingCoor([1, 1]);
-    expect(action).to.eql({
-      type: CHANGE_EDITING_COOR,
-      coor: [1, 1],
-    });
-  });
-});
-
-describe('changeSelectedCoor action', () => {
-  const {CHANGE_SELECTED_COOR, changeSelectedCoor} = sheetReducerActions;
-
-  it('should return an object with a coordinate and new value', () => {
-    const action = changeSelectedCoor([1, 1]);
-    expect(action).to.eql({
-      type: CHANGE_SELECTED_COOR,
-      coor: [1, 1],
-    });
-  });
-});
-
-describe('moveSelectedCoor action', () => {
-  const {MOVE_SELECTED_COOR, moveSelectedCoor} = sheetReducerActions;
-
-  it('should return an object with a direction', () => {
-    const action = moveSelectedCoor('up');
-    expect(action).to.eql({
-      type: MOVE_SELECTED_COOR,
-      direction: 'up',
-    });
-  });
-});
+import reducer, * as actions from './sheetReducer';
 
 describe('sheetReducer', () => {
-  it('should return the initial state', () => {
-    const initialState = sheetReducer(undefined, {});
-    expect(initialState).to.equal(Immutable.fromJS({
-      data: [
-        [{raw: 1, val: '1'}, {raw: 2, val: '2'}, {raw: 3, val: '3'}],
-        [{raw: 4, val: '4'}, {raw: 5, val: '5'}, {raw: 6, val: '6'}],
-        [{raw: 7, val: '7'}, {raw: 8, val: '8'}, {raw: 9, val: '9'}],
-      ],
-      editingCoor: [null, null],
-      selectedCoor: [null, null],
-    }));
-  });
-});
+  describe('actions', () => {
+    it('should create an action to change the primary selected coordinate', () => {
+      const expectedAction = {
+        type: actions.CHANGED_PRIMARY_SELECTED_COOR,
+        coor: [0, 0],
+      };
+      expect(actions.changedPrimarySelectedCoor([0, 0])).to.eql(expectedAction);
+    });
 
-describe('sheetReducer updateCellValue action', () => {
-  const {updateCellValue} = sheetReducerActions;
+    it('should create an action to start selecting a range', () => {
+      const expectedAction = {
+        type: actions.STARTED_SELECTING_RANGE,
+        mode: 'basic',
+        coor: [0, 0],
+      };
+      expect(actions.startedSelectingRange('basic', [0, 0])).to.eql(expectedAction);
+    });
 
-  it('should update `raw` with a number and `val` with a string representation of it', () => {
-    const state = sheetReducer(undefined, updateCellValue([0, 0], 100));
-    expect(state.getIn(['data', 0, 0, 'raw'])).to.equal(100);
-    expect(state.getIn(['data', 0, 0, 'val'])).to.equal('100');
-  });
+    it('should create an action to stop selecting a range', () => {
+      const expectedAction = {
+        type: actions.STOPPED_SELECTING_RANGE,
+      };
+      expect(actions.stoppedSelectingRange('basic', [0, 0])).to.eql(expectedAction);
+    });
 
-  it('should update `raw` with a string and `val` with the same string', () => {
-    const state = sheetReducer(undefined, updateCellValue([0, 0], 'foo'));
-    expect(state.getIn(['data', 0, 0, 'raw'])).to.equal('foo');
-    expect(state.getIn(['data', 0, 0, 'val'])).to.equal('foo');
-  });
+    it('should create an action to change the start of the selected range', () => {
+      const expectedAction = {
+        type: actions.CHANGED_SELECTED_RANGE_START,
+        coor: [0, 0],
+      };
+      expect(actions.changedSelectedRangeStart([0, 0])).to.eql(expectedAction);
+    });
 
-  it('should attemp to cast a string into a number for the raw value', () => {
-    const state = sheetReducer(undefined, updateCellValue([0, 0], '100'));
-    expect(state.getIn(['data', 0, 0, 'raw'])).to.equal(100);
-    expect(state.getIn(['data', 0, 0, 'val'])).to.equal('100');
-  });
+    it('should create an action to change the end of the selected range', () => {
+      const expectedAction = {
+        type: actions.CHANGED_SELECTED_RANGE_END,
+        coor: [0, 0],
+      };
+      expect(actions.changedSelectedRangeEnd([0, 0])).to.eql(expectedAction);
+    });
 
-  it('should update `raw` with a formula and `val` with the computed value', () => {
-    const state = sheetReducer(undefined, updateCellValue([0, 0], '=2+2'));
-    expect(state.getIn(['data', 0, 0, 'raw'])).to.equal('=2+2');
-    expect(state.getIn(['data', 0, 0, 'val'])).to.equal('4');
-  });
+    it('should create an action to change the selected range', () => {
+      const expectedAction = {
+        type: actions.CHANGED_SELECTED_RANGE,
+        mode: 'basic',
+        range: [[0, 0], [1, 1]],
+      };
+      expect(actions.changedSelectedRange('basic', [[0, 0], [1, 1]])).to.eql(expectedAction);
+    });
 
-  it('should update `raw` with a cell-ref formula and `val` with the computed value', () => {
-    const state = sheetReducer(undefined, updateCellValue([0, 0], '=B1*C2'));
-    expect(state.getIn(['data', 0, 0, 'raw'])).to.equal('=B1*C2');
-    expect(state.getIn(['data', 0, 0, 'val'])).to.equal('12');
-  });
-});
+    it('should create an action to start editing a cell', () => {
+      const expectedAction = {
+        type: actions.STARTED_EDITING_CELL,
+        mode: 'full',
+        coor: [0, 0],
+      };
+      expect(actions.startedEditingCell('full', [0, 0])).to.eql(expectedAction);
+    });
 
-describe('sheetReducer changeEditingCoor action', () => {
-  const {changeEditingCoor} = sheetReducerActions;
+    it('should create an action to commit the edited cell value', () => {
+      const expectedAction = {
+        type: actions.COMMITTED_EDIT_VALUE,
+      };
+      expect(actions.committedEditValue()).to.eql(expectedAction);
+    });
 
-  it('should update the editingCoor state with the new coordinate', () => {
-    const state = sheetReducer(undefined, changeEditingCoor([1, 1]));
-    expect(state.get('editingCoor')).to.equal(new Immutable.List([1, 1]));
-  });
-});
+    it('should create an action to discard the edited cell value', () => {
+      const expectedAction = {
+        type: actions.DISCARDED_EDIT_VALUE,
+      };
+      expect(actions.discardedEditValue()).to.eql(expectedAction);
+    });
 
-describe('sheetReducer changeSelectedCoor action', () => {
-  const {changeSelectedCoor} = sheetReducerActions;
+    it('should create an action to delete the range', () => {
+      const expectedAction = {
+        type: actions.DELETED_RANGE,
+        range: [[0, 0], [1, 1]],
+      };
+      expect(actions.deletedRange([[0, 0], [1, 1]])).to.eql(expectedAction);
+    });
 
-  it('should update the editingCoor state with the new coordinate', () => {
-    const state = sheetReducer(undefined, changeSelectedCoor([1, 1]));
-    expect(state.get('selectedCoor')).to.equal(new Immutable.List([1, 1]));
-  });
-});
+    it('should create an action to update the edit value', () => {
+      const expectedAction = {
+        type: actions.UPDATED_EDIT_VALUE,
+        value: 'foo',
+      };
+      expect(actions.updatedEditValue('foo')).to.eql(expectedAction);
+    });
 
-describe('sheetReducer moveSelectedCoor action', () => {
-  const {changeSelectedCoor, moveSelectedCoor} = sheetReducerActions;
-
-  it('should move the selected coor up', () => {
-    let state = sheetReducer(undefined, changeSelectedCoor([1, 1]));
-    state = sheetReducer(state, moveSelectedCoor('up'));
-    expect(state.get('selectedCoor')).to.equal(new Immutable.List([0, 1]));
-  });
-
-  it('should move the selected coor down', () => {
-    let state = sheetReducer(undefined, changeSelectedCoor([1, 1]));
-    state = sheetReducer(state, moveSelectedCoor('down'));
-    expect(state.get('selectedCoor')).to.equal(new Immutable.List([2, 1]));
-  });
-
-  it('should move the selected coor left', () => {
-    let state = sheetReducer(undefined, changeSelectedCoor([1, 1]));
-    state = sheetReducer(state, moveSelectedCoor('left'));
-    expect(state.get('selectedCoor')).to.equal(new Immutable.List([1, 0]));
-  });
-
-  it('should move the selected coor right', () => {
-    let state = sheetReducer(undefined, changeSelectedCoor([1, 1]));
-    state = sheetReducer(state, moveSelectedCoor('right'));
-    expect(state.get('selectedCoor')).to.equal(new Immutable.List([1, 2]));
-  });
-
-  it('should not move the selected coor up beyond the boundary', () => {
-    let state = sheetReducer(undefined, changeSelectedCoor([0, 0]));
-    state = sheetReducer(state, moveSelectedCoor('up'));
-    expect(state.get('selectedCoor')).to.equal(new Immutable.List([0, 0]));
-  });
-
-  it('should not move the selected coor down beyond the boundary', () => {
-    let state = sheetReducer(undefined, changeSelectedCoor([2, 2]));
-    state = sheetReducer(state, moveSelectedCoor('down'));
-    expect(state.get('selectedCoor')).to.equal(new Immutable.List([2, 2]));
+    it('should create an action to update the edit value caret position', () => {
+      const expectedAction = {
+        type: actions.UPDATED_EDIT_VALUE_CARET_POS,
+        pos: 1,
+      };
+      expect(actions.updatedEditValueCaretPos(1)).to.eql(expectedAction);
+    });
   });
 
-  it('should not move the selected coor left beyond the boundary', () => {
-    let state = sheetReducer(undefined, changeSelectedCoor([0, 0]));
-    state = sheetReducer(state, moveSelectedCoor('left'));
-    expect(state.get('selectedCoor')).to.equal(new Immutable.List([0, 0]));
-  });
+  describe('reducer', () => {
+    it('should return the initial state', () => {
+      const expectedState = Immutable.fromJS({
+        data: [
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+          [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
+        ],
 
-  it('should move the selected coor right beyond the boundary', () => {
-    let state = sheetReducer(undefined, changeSelectedCoor([2, 2]));
-    state = sheetReducer(state, moveSelectedCoor('right'));
-    expect(state.get('selectedCoor')).to.equal(new Immutable.List([2, 2]));
+        primarySelectedCoor: [undefined, undefined],
+
+        selectionMode: 'none',
+        selectedRange: [[undefined, undefined], [undefined, undefined]],
+        isSelectingRange: false,
+
+        editMode: 'none',
+        editCoor: [null, null],
+        editValue: '',
+        editValueCaretPos: 0,
+        isEditValueDirty: false,
+
+        formulaValue: '',
+        formulaValueInsertPos: 0,
+      });
+      const actualState = reducer(undefined, {});
+      expect(actualState).to.eql(expectedState);
+    });
+
+    describe('CHANGED_PRIMARY_SELECTED_COOR', () => {
+      it('should update the primarySelectedCoor', () => {
+        const actualState = reducer(undefined, actions.changedPrimarySelectedCoor([2, 2]));
+        expect(actualState.get('primarySelectedCoor')).to.eql(Immutable.fromJS([2, 2]));
+      });
+
+      it('should clamp the new coordinate within the bounds of the table', () => {
+        const actualState = reducer(undefined, actions.changedPrimarySelectedCoor([100, -100]));
+        expect(actualState.get('primarySelectedCoor')).to.eql(Immutable.fromJS([11, 0]));
+      });
+    });
+
+    describe('STARTED_SELECTING_RANGE', () => {
+      it('should set the basic mode and range', () => {
+        const actualState = reducer(undefined, actions.startedSelectingRange('basic', [2, 2]));
+        expect(actualState.get('isSelectingRange')).to.be.true;
+        expect(actualState.get('selectionMode')).to.equal('basic');
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[2, 2], [2, 2]]));
+      });
+
+      it('should set the autofill mode and range', () => {
+        const actualState = reducer(undefined, actions.startedSelectingRange('autofill', [2, 2]));
+        expect(actualState.get('isSelectingRange')).to.be.true;
+        expect(actualState.get('selectionMode')).to.equal('autofill');
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[2, 2], [2, 2]]));
+      });
+
+      it('should set the formula mode and range', () => {
+        const actualState = reducer(undefined, actions.startedSelectingRange('formula', [2, 2]));
+        expect(actualState.get('isSelectingRange')).to.be.true;
+        expect(actualState.get('selectionMode')).to.equal('formula');
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[2, 2], [2, 2]]));
+      });
+
+      it('should take a copy of the editValue and editValueCaretPos for formula ranges', () => {
+        let actualState = reducer(undefined, {});
+        actualState = actualState
+          .set('editValue', 'foo')
+          .set('editValueCaretPos', 100);
+        actualState = reducer(actualState, actions.startedSelectingRange('formula', [2, 2]));
+        expect(actualState.get('formulaValue')).to.equal('foo');
+        expect(actualState.get('formulaValueInsertPos')).to.equal(100);
+      });
+    });
+
+    describe('STOPPED_SELECTING_RANGE', () => {
+      it('should reset the selection mode', () => {
+        const actualState = reducer(undefined, actions.stoppedSelectingRange());
+        expect(actualState.get('isSelectingRange')).to.be.false;
+      });
+
+      it('should swap an autofilled range to a basic range', () => {
+        let actualState = reducer(undefined, actions.startedSelectingRange('autofill', [0, 0]));
+        actualState = reducer(actualState, actions.changedSelectedRangeEnd([2, 0]));
+        actualState = reducer(actualState, actions.stoppedSelectingRange());
+        expect(actualState.get('isSelectingRange')).to.be.false;
+        expect(actualState.get('selectionMode')).to.equal('basic');
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[0, 0], [2, 0]]));
+      });
+    });
+
+    describe('CHANGED_SELECTED_RANGE', () => {
+      it('should change the basic selected mode and range', () => {
+        const actualState = reducer(undefined, actions.changedSelectedRange('basic', [[0, 0], [1, 1]]));
+        expect(actualState.get('selectionMode')).to.equal('basic');
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[0, 0], [1, 1]]));
+      });
+
+      it('should clamp the basic selected range within the bounds of the table', () => {
+        const actualState = reducer(undefined, actions.changedSelectedRange('basic', [[-1, -1], [100, 100]]));
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[0, 0], [11, 2]]));
+      });
+
+      it('should change the formula selected mode and range', () => {
+        const actualState = reducer(undefined, actions.changedSelectedRange('formula', [[0, 0], [1, 1]]));
+        expect(actualState.get('selectionMode')).to.equal('formula');
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[0, 0], [1, 1]]));
+      });
+
+      it('should clamp the formula selected range within the bounds of the table', () => {
+        const actualState = reducer(undefined, actions.changedSelectedRange('formula', [[-1, -1], [100, 100]]));
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[0, 0], [11, 2]]));
+      });
+
+      it('should insert the selected range into the editValue', () => {
+        const actualState = reducer(undefined, actions.changedSelectedRange('formula', [[0, 0], [1, 1]]));
+        expect(actualState.get('editValue')).to.equal('A1:B2');
+      });
+
+      it('should change the autofill selected mode and range', () => {
+        const actualState = reducer(undefined, actions.changedSelectedRange('autofill', [[0, 0], [1, 0]]));
+        expect(actualState.get('selectionMode')).to.equal('autofill');
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[0, 0], [1, 0]]));
+      });
+
+      it('should clamp the autofill selected range within the bounds of the table', () => {
+        const actualState = reducer(undefined, actions.changedSelectedRange('autofill', [[-1, 0], [100, 0]]));
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[0, 0], [11, 0]]));
+      });
+
+      it('should clamp the autofill selected range vertically if more vertical cells are selected', () => {
+        const actualState = reducer(undefined, actions.changedSelectedRange('autofill', [[0, 0], [2, 1]]));
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[0, 0], [2, 0]]));
+      });
+
+      it('should clamp the autofill selected range horizontally if more horizontal cells are selected', () => {
+        const actualState = reducer(undefined, actions.changedSelectedRange('autofill', [[0, 0], [1, 2]]));
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[0, 0], [0, 2]]));
+      });
+    });
+
+    describe('CHANGED_SELECTED_RANGE_START', () => {
+      it('should only change the start value of the selected range', () => {
+        let actualState = reducer(undefined, actions.changedSelectedRange('basic', [[0, 0], [0, 0]]));
+        actualState = reducer(actualState, actions.changedSelectedRangeStart([1, 1]));
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[1, 1], [0, 0]]));
+      });
+    });
+
+    describe('CHANGED_SELECTED_RANGE_END', () => {
+      it('should only change the end value of the selected range', () => {
+        let actualState = reducer(undefined, actions.changedSelectedRange('basic', [[0, 0], [0, 0]]));
+        actualState = reducer(actualState, actions.changedSelectedRangeEnd([1, 1]));
+        expect(actualState.get('selectedRange')).to.eql(Immutable.fromJS([[0, 0], [1, 1]]));
+      });
+    });
+
+    describe('STARTED_EDITING_CELL', () => {
+      it('should set the edit properties', () => {
+        const actualState = reducer(undefined, actions.startedEditingCell('full', [1, 1]));
+        expect(actualState.get('editMode')).to.equal('full');
+        expect(actualState.get('editCoor')).to.eql(Immutable.fromJS([1, 1]));
+        expect(actualState.get('isEditValueDirty')).to.be.false;
+      });
+
+      it('should set copy the cell raw value into the editValue', () => {
+        let actualState = reducer(undefined, {});
+        actualState = actualState.setIn(['data', 0, 0, 'raw'], 'foo');
+        actualState = reducer(actualState, actions.startedEditingCell('full', [0, 0]));
+        expect(actualState.get('editValue')).to.equal('foo');
+      });
+    });
+
+    describe('UPDATED_EDIT_VALUE', () => {
+      it('should update the edit value and set the dirty flag to true', () => {
+        const actualState = reducer(undefined, actions.updatedEditValue('foo'));
+        expect(actualState.get('editValue')).to.equal('foo');
+        expect(actualState.get('isEditValueDirty')).to.be.true;
+      });
+    });
+
+    describe('UPDATED_EDIT_VALUE_CARET_POS', () => {
+      it('should update the caret position and set the dirty flag to true', () => {
+        const actualState = reducer(undefined, actions.updatedEditValueCaretPos(100));
+        expect(actualState.get('editValueCaretPos')).to.equal(100);
+        expect(actualState.get('isEditValueDirty')).to.be.true;
+      });
+    });
+
+    describe('COMMITTED_EDIT_VALUE', () => {
+      it('should save the editValue into the cell raw value', () => {
+        let actualState = reducer(undefined, actions.startedEditingCell('full', [0, 0]));
+        actualState = reducer(actualState, actions.updatedEditValue('foo'));
+        actualState = reducer(actualState, actions.committedEditValue());
+        expect(actualState.getIn(['data', 0, 0, 'raw'])).to.equal('foo');
+      });
+
+      it('should unset and clear all the edit properties', () => {
+        let actualState = reducer(undefined, actions.startedEditingCell('full', [0, 0]));
+        actualState = reducer(actualState, actions.committedEditValue());
+        expect(actualState.get('editMode')).to.equal('none');
+        expect(actualState.get('editCoor')).to.eql(Immutable.fromJS([undefined, undefined]));
+        expect(actualState.get('editValue')).to.equal('');
+        expect(actualState.get('isEditValueDirty')).to.be.false;
+      });
+    });
+
+    describe('DISCARDED_EDIT_VALUE', () => {
+      it('should not save the editValue into the cell raw value', () => {
+        let actualState = reducer(undefined, actions.startedEditingCell('full', [0, 0]));
+        actualState = reducer(actualState, actions.updatedEditValue('foo'));
+        actualState = reducer(actualState, actions.discardedEditValue());
+        expect(actualState.getIn(['data', 0, 0, 'raw'])).to.equal('');
+      });
+
+      it('should unset and clear all the edit properties', () => {
+        let actualState = reducer(undefined, actions.startedEditingCell('full', [0, 0]));
+        actualState = reducer(actualState, actions.discardedEditValue());
+        expect(actualState.get('editMode')).to.equal('none');
+        expect(actualState.get('editCoor')).to.eql(Immutable.fromJS([undefined, undefined]));
+        expect(actualState.get('editValue')).to.equal('');
+        expect(actualState.get('isEditValueDirty')).to.be.false;
+      });
+    });
+
+    describe('DELETED_RANGE', () => {
+      it('should clear the raw cell values from all cells within the range', () => {
+        let actualState = reducer(undefined, {});
+        actualState = actualState.setIn(['data', 0, 0, 'raw'], 'foo');
+        actualState = actualState.setIn(['data', 1, 1, 'raw'], 'bar');
+        actualState = actualState.setIn(['data', 2, 2, 'raw'], 'qux'); // outside the deletion range
+        actualState = reducer(actualState, actions.deletedRange([[0, 0], [1, 1]]));
+        expect(actualState.getIn(['data', 0, 0, 'raw'])).to.equal('');
+        expect(actualState.getIn(['data', 1, 1, 'raw'])).to.equal('');
+        expect(actualState.getIn(['data', 2, 2, 'raw'])).to.equal('qux');
+      });
+    });
   });
 });
