@@ -21,7 +21,7 @@ module.exports = {
   },
   module: {
     noParse: [
-      // Tells webpack not to parse sinon through and of the loaders
+      // Tells webpack not to parse sinon through any of the loaders
       /sinon/,
     ],
     loaders: [

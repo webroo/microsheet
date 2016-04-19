@@ -20,6 +20,13 @@ export function h(...args) {
   return React.createElement(...args);
 }
 
+/**
+ * Return a space separated string of all the key names that have thuthy values.
+ * @example
+ *   classNames({foo: true, bar: false, qux: true}) --> 'foo qux'
+ * @param  {Object} names Object of keys and boolean values
+ * @return {String}       Space separated string of keys that have thuthy values
+ */
 export function classNames(names) {
   return Object.keys(names).filter(key => names[key]).join(' ');
 }

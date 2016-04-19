@@ -2,7 +2,7 @@ import styles from './sheetTable.css';
 
 import React, {PropTypes} from 'react';
 
-import {isMatchingCoors, isCoorInRange, positivizeRange} from '../../utils/sheetUtils';
+import {isMatchingCoors, isCoorInRange, absoluteRange} from '../../utils/sheetUtils';
 import SheetCell from './sheetCell';
 
 class SheetTable extends React.Component {
@@ -138,7 +138,7 @@ class SheetTable extends React.Component {
                         cellCoor={cellCoor}
                         isPrimaryCell={isMatchingCoors(cellCoor, props.sheet.get('primarySelectedCoor').toJS())}
                         isEditing={isMatchingCoors(cellCoor, props.sheet.get('editCoor').toJS())}
-                        isInRange={isCoorInRange(cellCoor, positivizeRange(props.sheet.get('selectedRange').toJS()))}
+                        isInRange={isCoorInRange(cellCoor, absoluteRange(props.sheet.get('selectedRange').toJS()))}
                         selectionMode={props.sheet.get('selectionMode')}
                         selectedRange={props.sheet.get('selectedRange')}
                         editMode={props.sheet.get('editMode')}

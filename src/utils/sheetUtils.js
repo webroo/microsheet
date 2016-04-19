@@ -1,110 +1,8 @@
-export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+import {ALPHABET, expandAddrRange, getAddrFromCoor, absoluteRange} from './coordinateUtils';
 
 export const isNumber = n => !isNaN(parseFloat(n)) && isFinite(n);
 
 export const coerceStringToNumber = n => (isNumber(n) ? parseFloat(n) : n);
-
-export const createEmptyCoor = () => [undefined, undefined];
-
-export const createEmptyCoorRange = () => [[undefined, undefined], [undefined, undefined]];
-
-export const isValidCoor = coor => (
-  coor[0] !== undefined && coor[1] !== undefined
-);
-
-export const isValidCoorRange = range => (
-  isValidCoor(range[0]) && isValidCoor(range[1])
-);
-
-// The row address value is one-based, whereas the coordinate is zero-based
-export const getAddrFromCoor = coor => `${ALPHABET[coor[1]]}${coor[0] + 1}`;
-
-export const getCoorFromAddr = addr => {
-  // The row address value is one-based, whereas the coordinate is zero-based
-  const rowIndex = parseInt(addr.substring(1)) - 1;
-  const cellIndex = ALPHABET.indexOf(addr.charAt(0)) > -1 ? ALPHABET.indexOf(addr.charAt(0)) : undefined;
-  return [rowIndex, cellIndex];
-};
-
-export const getAddrRangeFromCoorRange = coorRange => (
-  getAddrFromCoor(coorRange[0]) + ':' + getAddrFromCoor(coorRange[1])
-);
-
-export const getCoorRangeFromAddrRange = addrRange => {
-  const [startAddr, endAddr] = addrRange.split(':');
-  return [getCoorFromAddr(startAddr), getCoorFromAddr(endAddr)];
-};
-
-export const isMatchingCoors = (coorA, coorB) => (
-  coorA[0] === coorB[0] && coorA[1] === coorB[1]
-);
-
-export const isCoorInRange = (coor, range) => (
-  coor[0] >= range[0][0] &&
-  coor[0] <= range[1][0] &&
-  coor[1] >= range[0][1] &&
-  coor[1] <= range[1][1]
-);
-
-export const positivizeRange = range => (
-  [
-    [Math.min(range[0][0], range[1][0]), Math.min(range[0][1], range[1][1])],
-    [Math.max(range[0][0], range[1][0]), Math.max(range[0][1], range[1][1])],
-  ]
-);
-
-export const rangeSize = range => {
-  const pRange = positivizeRange(range);
-  return (pRange[1][0] - pRange[0][0] + 1) * // Row size
-         (pRange[1][1] - pRange[0][1] + 1);  // Col size
-};
-
-export const translateCoor = (coorA, coorB) => (
-  [coorA[0] + coorB[0], coorA[1] + coorB[1]]
-);
-
-export const translationIdentities = {
-  up: [-1, 0],
-  down: [1, 0],
-  left: [0, -1],
-  right: [0, 1],
-};
-
-export const clampCoorToRange = (coor, range) => {
-  const pRange = positivizeRange(range);
-  return [
-    Math.min(Math.max(coor[0], pRange[0][0]), pRange[1][0]),
-    Math.min(Math.max(coor[1], pRange[0][1]), pRange[1][1]),
-  ];
-};
-
-export const clampRangeToRange = (rangeA, rangeB) => (
-  [
-    clampCoorToRange(rangeA[0], rangeB),
-    clampCoorToRange(rangeA[1], rangeB),
-  ]
-);
-
-// Expands a coor range into an array of all the coors contained in the range
-// eg: [[0,0],[1,1]] --> [[0,0],[0,1],[1,0],[1,1]]
-export const expandCoorRange = range => {
-  const pRange = positivizeRange(range);
-  const expandedRange = [];
-  for (let rowIndex = pRange[0][0]; rowIndex <= pRange[1][0]; rowIndex++) {
-    for (let cellIndex = pRange[0][1]; cellIndex <= pRange[1][1]; cellIndex++) {
-      expandedRange.push([rowIndex, cellIndex]);
-    }
-  }
-  return expandedRange;
-};
-
-// Expands an address range into a comma separated string of all the addresses
-// eg: A1:B2 --> A1,B1,A2,B2
-export const expandAddrRange = addrRange => {
-  const coorRange = getCoorRangeFromAddrRange(addrRange);
-  const expandedRange = expandCoorRange(coorRange).map(coor => getAddrFromCoor(coor));
-  return expandedRange.join(',');
-};
 
 export const isFormula = value => (
   typeof value === 'string' && value.charAt(0) === '='
@@ -214,7 +112,7 @@ export const computeSheet = sheet => {
 export const autofillSheet = (sheet, range) => {
   const originCoor = range[0];
   const originValue = sheet.getIn([...range[0], 'raw']);
-  const pRange = positivizeRange(range);
+  const pRange = absoluteRange(range);
   let newSheet = sheet;
 
   for (let rowIndex = pRange[0][0]; rowIndex <= pRange[1][0]; rowIndex++) {
@@ -227,6 +125,7 @@ export const autofillSheet = (sheet, range) => {
       let newValue;
       if (isFormula(originValue)) {
         newValue = originValue.replace(/([A-Z])(\d{1,2})/g, (match, colAddr, rowAddr) => {
+          // TODO: we can use getAddrFromCoor here
           const newColAddr = ALPHABET[ALPHABET.indexOf(colAddr) + offset[1]];
           const newRowAddr = (parseInt(rowAddr) + offset[0]);
           return newColAddr + newRowAddr;
@@ -241,22 +140,6 @@ export const autofillSheet = (sheet, range) => {
 
   return newSheet;
 };
-
-export const isTopEdgeOfRange = (range, coor) => (
-  isCoorInRange(coor, range) && coor[0] === range[0][0]
-);
-
-export const isBottomEdgeOfRange = (range, coor) => (
-  isCoorInRange(coor, range) && coor[0] === range[1][0]
-);
-
-export const isLeftEdgeOfRange = (range, coor) => (
-  isCoorInRange(coor, range) && coor[1] === range[0][1]
-);
-
-export const isRightEdgeOfRange = (range, coor) => (
-  isCoorInRange(coor, range) && coor[1] === range[1][1]
-);
 
 export const getSheetExtentRange = sheetData => {
   const maxRows = sheetData.size - 1;

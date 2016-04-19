@@ -2,6 +2,7 @@ import Immutable from 'immutable';
 
 import {createReducer} from '../utils/reduxUtils';
 import * as sheetUtils from '../utils/sheetUtils';
+import * as coordinateUtils from '../utils/coordinateUtils';
 
 // The `raw` property is the underlying user input, and `val` is the evaluated (displayed) output.
 // `val` is always a string as it's just a displayable value in the UI
@@ -21,10 +22,10 @@ const initialState = Immutable.fromJS({
     [{raw: '', val: ''}, {raw: '', val: ''}, {raw: '', val: ''}],
   ],
 
-  primarySelectedCoor: sheetUtils.createEmptyCoor(),
+  primarySelectedCoor: coordinateUtils.createEmptyCoor(),
 
   selectionMode: 'none', // none/basic/formula/autofill
-  selectedRange: sheetUtils.createEmptyCoorRange(),
+  selectedRange: coordinateUtils.createEmptyRange(),
   isSelectingRange: false,
 
   editMode: 'none', // none/full/quick
@@ -55,7 +56,7 @@ export const updatedEditValueCaretPos = pos => ({type: 'UPDATED_EDIT_VALUE_CARET
 
 function setBasicRange(state, range) {
   const extent = sheetUtils.getSheetExtentRange(state.get('data'));
-  const clampedRange = sheetUtils.clampRangeToRange(range, extent);
+  const clampedRange = coordinateUtils.clampRangeToRange(range, extent);
 
   return state
     .set('selectionMode', 'basic')
@@ -88,10 +89,10 @@ function setAutofillRange(state, range) {
 function setFormulaRange(state, range) {
   const caretPos = state.get('formulaValueInsertPos');
   let cellAddr;
-  if (sheetUtils.rangeSize(range) === 1) {
-    cellAddr = sheetUtils.getAddrFromCoor(range[0]);
+  if (coordinateUtils.rangeSize(range) === 1) {
+    cellAddr = coordinateUtils.getAddrFromCoor(range[0]);
   } else {
-    cellAddr = sheetUtils.getAddrRangeFromCoorRange(range);
+    cellAddr = coordinateUtils.getAddrRangeFromCoorRange(range);
   }
   const editingValue = state.get('formulaValue');
   const newValue = editingValue.substring(0, caretPos) + cellAddr + editingValue.substring(caretPos);
@@ -133,7 +134,7 @@ function setCellValue(state, coor, value) {
 function stopEditing(state) {
   return state
     .set('editMode', 'none')
-    .set('editCoor', Immutable.fromJS(sheetUtils.createEmptyCoor()))
+    .set('editCoor', Immutable.fromJS(coordinateUtils.createEmptyCoor()))
     .set('editValue', '')
     .set('isEditValueDirty', false);
 }
@@ -141,7 +142,7 @@ function stopEditing(state) {
 export const actionHandlers = {
   CHANGED_PRIMARY_SELECTED_COOR(state, {coor}) {
     const extent = sheetUtils.getSheetExtentRange(state.get('data'));
-    const newCoor = sheetUtils.clampCoorToRange(coor, extent);
+    const newCoor = coordinateUtils.clampCoorToRange(coor, extent);
     return setBasicRange(state, [newCoor, newCoor])
       .set('primarySelectedCoor', Immutable.fromJS(newCoor));
   },
@@ -223,7 +224,7 @@ export const actionHandlers = {
 
   DELETED_RANGE(state, {range}) {
     let data = state.get('data');
-    sheetUtils.expandCoorRange(range).forEach(coor => {
+    coordinateUtils.expandCoorRange(range).forEach(coor => {
       data = data.setIn([...coor, 'raw'], '');
     });
     data = sheetUtils.computeSheet(data);

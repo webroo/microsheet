@@ -6,19 +6,19 @@ import {classNames} from '../../utils/reactUtils';
 import {
   isNumber,
   isFormula,
-  positivizeRange,
+  absoluteRange,
   rangeSize,
-  isTopEdgeOfRange,
-  isBottomEdgeOfRange,
-  isLeftEdgeOfRange,
-  isRightEdgeOfRange,
+  isCoorAtTopEdgeOfRange,
+  isCoorAtBottomEdgeOfRange,
+  isCoorAtLeftEdgeOfRange,
+  isCoorAtRightEdgeOfRange,
 } from '../../utils/sheetUtils';
 
 const SheetCell = props => {
   const isAutofilling = props.selectionMode === 'autofill' && props.isInRange;
   const isInsertingFormulaRange = props.selectionMode === 'formula' && props.isInRange;
 
-  const currentSelectionRange = positivizeRange(props.selectedRange.toJS());
+  const currentSelectionRange = absoluteRange(props.selectedRange.toJS());
 
   const cssClass = classNames({
     [styles.selected]: props.isPrimaryCell,
@@ -27,10 +27,10 @@ const SheetCell = props => {
     [styles.number]: isNumber(props.cellData.get('val')),
     [styles.insertionSelected]: isInsertingFormulaRange,
     [styles.autofillSelected]: isAutofilling,
-    [styles.topEdge]: isTopEdgeOfRange(currentSelectionRange, props.cellCoor),
-    [styles.bottomEdge]: isBottomEdgeOfRange(currentSelectionRange, props.cellCoor),
-    [styles.leftEdge]: isLeftEdgeOfRange(currentSelectionRange, props.cellCoor),
-    [styles.rightEdge]: isRightEdgeOfRange(currentSelectionRange, props.cellCoor),
+    [styles.topEdge]: isCoorAtTopEdgeOfRange(props.cellCoor, currentSelectionRange),
+    [styles.bottomEdge]: isCoorAtBottomEdgeOfRange(props.cellCoor, currentSelectionRange),
+    [styles.leftEdge]: isCoorAtLeftEdgeOfRange(props.cellCoor, currentSelectionRange),
+    [styles.rightEdge]: isCoorAtRightEdgeOfRange(props.cellCoor, currentSelectionRange),
   });
 
   return (
