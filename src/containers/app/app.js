@@ -51,8 +51,6 @@ const mapDispatchToProps = {
   tableKeyShiftLeft: sheetThunks.tableKeyShiftLeft,
   tableKeyShiftRight: sheetThunks.tableKeyShiftRight,
 
-  tableKeyCmdA: sheetThunks.tableKeyCmdA,
-
   tableKeyCmdUp: sheetThunks.tableKeyCmdUp,
   tableKeyCmdDown: sheetThunks.tableKeyCmdDown,
   tableKeyCmdLeft: sheetThunks.tableKeyCmdLeft,
@@ -64,6 +62,7 @@ const mapDispatchToProps = {
 
   tableKeyOther: sheetThunks.tableKeyOther,
 
+  tableSelectAll: sheetThunks.tableSelectAll,
   tableUndo: sheetThunks.tableUndo,
   tableRedo: sheetThunks.tableRedo,
 

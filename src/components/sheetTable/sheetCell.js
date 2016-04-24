@@ -48,7 +48,6 @@ const SheetCell = props => {
           onSelect={event => {
             props.updatedEditValueCaretPos(event.target.selectionStart);
           }}
-          // onBlur={event => {}}
           onKeyDown={event => {
             // This only allows the following keys to bubble up to the table above
             if (

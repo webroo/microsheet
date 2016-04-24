@@ -59,7 +59,6 @@ export const documentMouseUp = () => (dispatch, getState) => {
   }
 };
 
-// TODO this is almost identical to the action below
 export const tableKeyEnter = shiftKey => (dispatch, getState) => {
   const sheet = getState().present.getIn(['sheet']);
   if (sheet.get('editMode') === 'none') {
@@ -76,7 +75,6 @@ export const tableKeyShiftEnter = () => dispatch => {
   dispatch(tableKeyEnter(true));
 };
 
-// TODO this is almost identical to the action below
 export const tableKeyTab = shiftKey => (dispatch, getState) => {
   const sheet = getState().present.getIn(['sheet']);
   const translationIdentity = shiftKey ? translationIdentities.left : translationIdentities.right;
@@ -162,7 +160,7 @@ export const tableKeyShiftRight = () => dispatch => {
   dispatch(tableKeyShiftArrow('right'));
 };
 
-export const tableKeyCmdA = () => (dispatch, getState) => {
+export const tableSelectAll = () => (dispatch, getState) => {
   const sheet = getState().present.getIn(['sheet']);
   if (sheet.get('editMode') === 'none') {
     const extent = getSheetExtent(sheet.get('data'));

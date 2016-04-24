@@ -3,12 +3,43 @@ import styles from './sheetTable.css';
 import React, {PropTypes} from 'react';
 
 import {isMatchingCoors, isCoorInRange, absoluteRange} from '../../utils/coordinateUtils';
+import handleKeys, {isModifierKey} from '../../utils/handleKeys';
 import SheetCell from './sheetCell';
 
 class SheetTable extends React.Component {
   constructor(props) {
     super(props);
+
     this.onDocumentMouseUp = this.onDocumentMouseUp.bind(this);
+
+    this.handleKeyEvent = handleKeys({
+      'enter': props.tableKeyEnter,
+      'shift+enter': props.tableKeyShiftEnter,
+      'tab': {callback: props.tableKeyTab, preventDefault: true},
+      'shift+tab': {callback: props.tableKeyShiftTab, preventDefault: true},
+      'backspace': {callback: props.tableKeyDelete, preventDefault: true},
+      'del': props.tableKeyDelete,
+      'esc': props.tableKeyEsc,
+      'up': props.tableKeyUp,
+      'shift+up': props.tableKeyShiftUp,
+      'mod+up': props.tableKeyCmdUp,
+      'mod+shift+up': props.tableKeyCmdShiftUp,
+      'down': props.tableKeyDown,
+      'shift+down': props.tableKeyShiftDown,
+      'mod+down': props.tableKeyCmdDown,
+      'mod+shift+down': props.tableKeyCmdShiftDown,
+      'left': props.tableKeyLeft,
+      'shift+left': props.tableKeyShiftLeft,
+      'mod+left': {callback: props.tableKeyCmdLeft, preventDefault: true},
+      'mod+shift+left': props.tableKeyCmdShiftLeft,
+      'right': props.tableKeyRight,
+      'shift+right': props.tableKeyShiftRight,
+      'mod+right': {callback: props.tableKeyCmdRight, preventDefault: true},
+      'mod+shift+right': props.tableKeyCmdShiftRight,
+      'mod+a': {callback: props.tableSelectAll, preventDefault: true},
+      'mod+z': props.tableUndo,
+      'mod+shift+z': props.tableRedo,
+    });
   }
 
   componentDidMount() {
@@ -31,80 +62,14 @@ class SheetTable extends React.Component {
         tabIndex="0"
         className={styles.sheetTable}
         onKeyDown={event => {
-          // Key events don't reach here from within the editable cell input field
-          if (event.key === 'Enter') {
-            if (event.shiftKey) {
-              props.tableKeyShiftEnter();
-            } else {
-              props.tableKeyEnter();
-            }
-          } else if (event.key === 'Tab') {
-            event.preventDefault();
-            if (event.shiftKey) {
-              props.tableKeyShiftTab();
-            } else {
-              props.tableKeyTab();
-            }
-          } else if (event.key === 'Backspace' || event.key === 'Delete') {
-            event.preventDefault();
-            props.tableKeyDelete();
-          } else if (event.key === 'Escape') {
-            props.tableKeyEsc();
-          } else if (event.key === 'ArrowUp') {
-            if ((event.metaKey || event.ctrlKey) && event.shiftKey) {
-              props.tableKeyCmdShiftUp();
-            } else if (event.metaKey || event.ctrlKey) {
-              props.tableKeyCmdUp();
-            } else if (event.shiftKey) {
-              props.tableKeyShiftUp();
-            } else {
-              props.tableKeyUp();
-            }
-          } else if (event.key === 'ArrowDown') {
-            if ((event.metaKey || event.ctrlKey) && event.shiftKey) {
-              props.tableKeyCmdShiftDown();
-            } else if (event.metaKey || event.ctrlKey) {
-              props.tableKeyCmdDown();
-            } else if (event.shiftKey) {
-              props.tableKeyShiftDown();
-            } else {
-              props.tableKeyDown();
-            }
-          } else if (event.key === 'ArrowLeft') {
-            if ((event.metaKey || event.ctrlKey) && event.shiftKey) {
-              props.tableKeyCmdShiftLeft();
-            } else if (event.metaKey || event.ctrlKey) {
-              event.preventDefault();
-              props.tableKeyCmdLeft();
-            } else if (event.shiftKey) {
-              props.tableKeyShiftLeft();
-            } else {
-              props.tableKeyLeft();
-            }
-          } else if (event.key === 'ArrowRight') {
-            if ((event.metaKey || event.ctrlKey) && event.shiftKey) {
-              props.tableKeyCmdShiftRight();
-            } else if (event.metaKey || event.ctrlKey) {
-              event.preventDefault();
-              props.tableKeyCmdRight();
-            } else if (event.shiftKey) {
-              props.tableKeyShiftRight();
-            } else {
-              props.tableKeyRight();
-            }
-          } else if (event.keyCode === 65 && (event.metaKey || event.ctrlKey)) {
-            event.preventDefault();
-            props.tableKeyCmdA();
-          } else if (event.keyCode === 90 && event.shiftKey && (event.metaKey || event.ctrlKey)) {
-            props.tableRedo();
-          } else if (event.keyCode === 90 && (event.metaKey || event.ctrlKey)) {
-            props.tableUndo();
-          } else if (
-            event.key !== 'Control' &&
-            event.key !== 'Alt' &&
-            event.key !== 'Shift' &&
-            event.key !== 'Escape' &&
-            !event.metaKey
+          // If the key combo wasn't handled by the hotkeys, and it's not a solo modifier key,
+          // then start quick editing the cell
+          if (
+            !this.handleKeyEvent(event) &&
+            !isModifierKey(event) &&
+            !event.metaKey &&
+            !event.ctrlKey &&
+            event.key !== 'Escape'
           ) {
             props.tableKeyOther();
           }
