@@ -103,11 +103,7 @@ export const computeSheet = sheet => {
           }
           // Remove the starting '=' symbol and sanitize the expression before we evaluate it
           const expr = sanitizeExpression(cellVal.substring(1));
-
-          // Keep track of when we're computing a formula - see comment further down for more info
-          isComputingFormula = true;
           const newCellVal = evalFunc(cellMap, expr);
-          isComputingFormula = false;
 
           if (typeof newCellVal === 'undefined') {
             throw new Error('Bad formula');
@@ -132,14 +128,19 @@ export const computeSheet = sheet => {
     return row.map((cell, cellIndex) => {
       let computedVal;
 
+      // We keep track of when we're computing a formula so that we can ignore string values
+      // and return 0 instead, this allows empty cells to be ignored when summing ranges.
+      isComputingFormula = isFormula(cell.get('raw'));
+
       try {
         computedVal = cellMap[getAddrFromCoor([rowIndex, cellIndex])];
       } catch (error) {
         // Circular references in forumlas will throw a stack overflow error from the recursive getters
         computedVal = '#ERROR!';
-        // The error will have been thrown while computing a formula, so we must reset the flag
-        isComputingFormula = false;
       }
+
+      // Reset the flag for the next cell calculation
+      isComputingFormula = false;
 
       return cell.set('val', computedVal.toString());
     });
