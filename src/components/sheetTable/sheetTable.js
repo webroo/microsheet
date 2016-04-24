@@ -12,6 +12,8 @@ class SheetTable extends React.Component {
 
     this.onDocumentMouseUp = this.onDocumentMouseUp.bind(this);
 
+    // A single hotkey can have multiple side-effects on the table, all depending on the current state.
+    // The sheetReducerThunks handle this business logic and dispatch the appropriate actions.
     this.handleKeyEvent = handleKeys({
       'enter': props.tableKeyEnter,
       'shift+enter': props.tableKeyShiftEnter,
@@ -75,6 +77,7 @@ class SheetTable extends React.Component {
           }
         }}
         ref={table => {
+          // If we're not in edit more then focus the table, which will allow the hotkeys to work
           if (table && props.sheet.get('editMode') === 'none') {
             table.focus();
           }

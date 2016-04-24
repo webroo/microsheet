@@ -14,6 +14,9 @@ const App = props => {
     <div className={styles.container}>
       <h1 className={styles.title}>microsheet</h1>
       <SheetTable {...props} />
+      <div className={styles.footer}>
+        <a href="https://github.com/webroo/microsheet">github</a>
+      </div>
     </div>
   );
 };
@@ -24,6 +27,7 @@ const mapStateToProps = state => ({
   colHeaderData: colHeaderSelector(state.present.get('sheet')),
 });
 
+// TODO: look into bindActionCreators to reduce the size of this
 const mapDispatchToProps = {
   cellMouseDown: sheetThunks.cellMouseDown,
   cellMouseOver: sheetThunks.cellMouseOver,

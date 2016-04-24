@@ -1,6 +1,22 @@
-# Tiny Sheet
+# Microsheet
 
-Tiny spreadsheet.
+A very small spreadsheet. Built with React, Redux, and Immutable.
+
+![Screenshot](./screenshot.png)
+
+Features:
+
+- Formula support, inc. cell references
+- Basic formula calculations, inc. SUM and AVERAGE
+- Autofill
+- Undo/redo
+- Full keyboard support
+
+## Install
+
+Clone repository, then run:
+
+    npm install
 
 ## Run scripts
 

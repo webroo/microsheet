@@ -16,7 +16,6 @@ import {
 const SheetCell = props => {
   const isAutofilling = props.selectionMode === 'autofill' && props.isInRange;
   const isInsertingFormulaRange = props.selectionMode === 'formula' && props.isInRange;
-
   const currentSelectionRange = absoluteRange(props.selectedRange.toJS());
 
   const cssClass = classNames({
@@ -49,7 +48,8 @@ const SheetCell = props => {
             props.updatedEditValueCaretPos(event.target.selectionStart);
           }}
           onKeyDown={event => {
-            // This only allows the following keys to bubble up to the table above
+            // This only allows the following keys to bubble up to the table above. Every other key
+            // is trapped in the input element, ensuring hotkeys aren't accidentally triggered.
             if (
               event.key !== 'ArrowUp' &&
               event.key !== 'ArrowDown' &&

@@ -1,13 +1,13 @@
 {
-  "name": "tiny-sheet",
+  "name": "microsheet",
   "version": "1.0.0",
-  "description": "Tiny Spreadsheet",
+  "description": "Microsheet",
   "author": "Matt Sweetman",
   "license": "MIT",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/webroo/tiny-sheet.git"
+    "url": "https://github.com/webroo/microsheet.git"
   },
   "scripts": {
     "clean": "rm -rf ./build",
