@@ -55,6 +55,8 @@ export const sanitizeExpression = expr => {
     // Remove anything that isn't a valid formula symbol or uppercase A-Z character. All valid
     // formula function names and cell address will have already been capitalized.
     .replace(/[^+\-*/().,:\dA-Z]/g, '')
+    // Remove any formula name that isn't suffixed with a parenthesis.
+    .replace(/(SUM|AVERAGE)(?!\()/g, '')
     // Remove any sequence of A-Z chars of 2 or greater, unless it's a valid formula function name.
     // (Remember, a cell address can only have one letter)
     .replace(/[A-Z]{2,}/g, v => (['SUM', 'AVERAGE'].includes(v) ? v : ''))
