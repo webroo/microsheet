@@ -12,9 +12,9 @@ class SheetTable extends React.Component {
 
     this.onDocumentMouseUp = this.onDocumentMouseUp.bind(this);
 
-    // A single hotkey can have multiple side-effects on the table, all depending on the current state.
-    // The sheetReducerThunks handle this business logic and dispatch the appropriate actions.
-    this.handleKeyEvent = handleKeys({
+    // A key press can have multiple side-effects on the table depending on it's current state.
+    // The sheetReducerThunks are responsible for making the right decision and dispatching the appropriate actions.
+    this.hotkeyHandler = handleKeys({
       'enter': props.tableKeyEnter,
       'shift+enter': props.tableKeyShiftEnter,
       'tab': {callback: props.tableKeyTab, preventDefault: true},
@@ -56,6 +56,24 @@ class SheetTable extends React.Component {
     this.props.documentMouseUp();
   }
 
+  onTableKeyDown(event) {
+    const handled = this.hotkeyHandler(event);
+
+    // If the keypress wasn't a hotkey then we want to start quick editing the cell, but only if
+    // the key press wasn't a modifier or escape key.
+    if (!handled && !isModifierKey(event) && !event.metaKey && !event.ctrlKey && event.key !== 'Escape') {
+      this.props.tableKeyOther();
+    }
+  }
+
+  onUpdateTableRef(table) {
+    // Everytime the table is re-rendered we ensure it's given DOM focus so the hotkeys will work.
+    // The only exception is when we're in edit mode, in which case the cell's input field has focus.
+    if (table && this.props.sheet.get('editMode') === 'none') {
+      table.focus();
+    }
+  }
+
   render() {
     const props = this.props;
 
@@ -63,32 +81,15 @@ class SheetTable extends React.Component {
       <table
         tabIndex="0"
         className={styles.sheetTable}
-        onKeyDown={event => {
-          // If the key combo wasn't handled by the hotkeys, and it's not a solo modifier key,
-          // then start quick editing the cell
-          if (
-            !this.handleKeyEvent(event) &&
-            !isModifierKey(event) &&
-            !event.metaKey &&
-            !event.ctrlKey &&
-            event.key !== 'Escape'
-          ) {
-            props.tableKeyOther();
-          }
-        }}
-        ref={table => {
-          // If we're not in edit more then focus the table, which will allow the hotkeys to work
-          if (table && props.sheet.get('editMode') === 'none') {
-            table.focus();
-          }
-        }}
+        onKeyDown={event => this.onTableKeyDown(event)}
+        ref={table => this.onUpdateTableRef(table)}
       >
         <tbody>
           <tr>
             <th></th>
             {
-              props.rowHeaderData.map((cell, cellIndex) => (
-                <th scope="col" key={cellIndex}>{cell}</th>
+              props.rowHeaderData.map((cellLabel, cellIndex) => (
+                <th scope="col" key={cellIndex}>{cellLabel}</th>
               ))
             }
           </tr>
@@ -104,6 +105,7 @@ class SheetTable extends React.Component {
                         key={cellIndex}
                         cellData={cellData}
                         cellCoor={cellCoor}
+
                         isPrimaryCell={isMatchingCoors(cellCoor, props.sheet.get('primarySelectedCoor').toJS())}
                         isEditing={isMatchingCoors(cellCoor, props.sheet.get('editCoor').toJS())}
                         isInRange={isCoorInRange(cellCoor, absoluteRange(props.sheet.get('selectedRange').toJS()))}

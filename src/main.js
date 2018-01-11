@@ -18,7 +18,6 @@ import {Iterable} from 'immutable';
 import rootReducer from './reducers/rootReducer';
 import App from './containers/app/app';
 
-// List of Redux middlewares
 const middlewares = [thunk];
 
 // We only want to add Redux logger middleware in a dev environment
@@ -31,10 +30,9 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
-// Redux middleware needs to be applied to create a Store enhancer
 let storeEnhancer = applyMiddleware(...middlewares);
 
-// If we're in dev mode we add a hook for the Redux Chrome tools to the store enhancer
+// If we're in dev mode we add a hook for the Redux Chrome tools
 if (process.env.NODE_ENV !== 'production') {
   storeEnhancer = compose(
     storeEnhancer,
@@ -42,11 +40,10 @@ if (process.env.NODE_ENV !== 'production') {
   );
 }
 
-// Create the Redux store
-const mainStore = createStore(rootReducer, storeEnhancer);
+const store = createStore(rootReducer, storeEnhancer);
 
 ReactDOM.render((
-  <Provider store={mainStore}>
+  <Provider store={store}>
     <App />
   </Provider>
 ), document.getElementById('app'));

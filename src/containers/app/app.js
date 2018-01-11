@@ -27,51 +27,10 @@ const mapStateToProps = state => ({
   colHeaderData: colHeaderSelector(state.present.get('sheet')),
 });
 
-// TODO: look into bindActionCreators to reduce the size of this
 const mapDispatchToProps = {
-  cellMouseDown: sheetThunks.cellMouseDown,
-  cellMouseOver: sheetThunks.cellMouseOver,
-  cellMouseUp: sheetThunks.cellMouseUp,
-  cellShiftMouseDown: sheetThunks.cellShiftMouseDown,
-  cellDoubleClick: sheetThunks.cellDoubleClick,
-  autofillMouseDown: sheetThunks.autofillMouseDown,
-  autofillMouseUp: sheetThunks.autofillMouseUp,
-  documentMouseUp: sheetThunks.documentMouseUp,
-
-  tableKeyEnter: sheetThunks.tableKeyEnter,
-  tableKeyShiftEnter: sheetThunks.tableKeyShiftEnter,
-  tableKeyTab: sheetThunks.tableKeyTab,
-  tableKeyShiftTab: sheetThunks.tableKeyShiftTab,
-  tableKeyEsc: sheetThunks.tableKeyEsc,
-  tableKeyDelete: sheetThunks.tableKeyDelete,
-
-  tableKeyUp: sheetThunks.tableKeyUp,
-  tableKeyDown: sheetThunks.tableKeyDown,
-  tableKeyLeft: sheetThunks.tableKeyLeft,
-  tableKeyRight: sheetThunks.tableKeyRight,
-
-  tableKeyShiftUp: sheetThunks.tableKeyShiftUp,
-  tableKeyShiftDown: sheetThunks.tableKeyShiftDown,
-  tableKeyShiftLeft: sheetThunks.tableKeyShiftLeft,
-  tableKeyShiftRight: sheetThunks.tableKeyShiftRight,
-
-  tableKeyCmdUp: sheetThunks.tableKeyCmdUp,
-  tableKeyCmdDown: sheetThunks.tableKeyCmdDown,
-  tableKeyCmdLeft: sheetThunks.tableKeyCmdLeft,
-  tableKeyCmdRight: sheetThunks.tableKeyCmdRight,
-  tableKeyCmdShiftUp: sheetThunks.tableKeyCmdShiftUp,
-  tableKeyCmdShiftDown: sheetThunks.tableKeyCmdShiftDown,
-  tableKeyCmdShiftLeft: sheetThunks.tableKeyCmdShiftLeft,
-  tableKeyCmdShiftRight: sheetThunks.tableKeyCmdShiftRight,
-
-  tableKeyOther: sheetThunks.tableKeyOther,
-
-  tableSelectAll: sheetThunks.tableSelectAll,
-  tableUndo: sheetThunks.tableUndo,
-  tableRedo: sheetThunks.tableRedo,
-
   updatedEditValue: sheetActions.updatedEditValue,
   updatedEditValueCaretPos: sheetActions.updatedEditValueCaretPos,
+  ...sheetThunks
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

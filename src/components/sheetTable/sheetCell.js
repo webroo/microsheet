@@ -19,7 +19,7 @@ const SheetCell = props => {
   const currentSelectionRange = absoluteRange(props.selectedRange.toJS());
 
   const cssClass = classNames({
-    [styles.selected]: props.isPrimaryCell,
+    [styles.primary]: props.isPrimaryCell,
     [styles.editing]: props.isEditing,
     [styles.rangeSelected]: props.isInRange && rangeSize(props.selectedRange.toJS()) > 1,
     [styles.number]: canCoerceToNumber(props.cellData.get('val')),
@@ -31,58 +31,48 @@ const SheetCell = props => {
     [styles.rightEdge]: isCoorAtRightEdgeOfRange(props.cellCoor, currentSelectionRange),
   });
 
-  return (
-    props.isEditing ?
+  let cellElement;
+
+  if (props.isEditing) {
+    cellElement = (
       <td className={cssClass}>
         <input
           type="text"
+          value={props.editValue}
           className={classNames({
             [styles.number]: canCoerceToNumber(props.cellData.get('val')),
             [styles.formula]: isFormula(props.cellData.get('raw')),
           })}
-          value={props.editValue}
-          onChange={event => {
-            props.updatedEditValue(event.target.value);
-          }}
-          onSelect={event => {
-            props.updatedEditValueCaretPos(event.target.selectionStart);
-          }}
+          onChange={event => props.updatedEditValue(event.target.value)}
+          onSelect={event => props.updatedEditValueCaretPos(event.target.selectionStart)}
           onKeyDown={event => {
-            // This only allows the following keys to bubble up to the table above. Every other key
-            // is trapped in the input element, ensuring hotkeys aren't accidentally triggered.
-            if (
-              event.key !== 'ArrowUp' &&
-              event.key !== 'ArrowDown' &&
-              event.key !== 'ArrowLeft' &&
-              event.key !== 'ArrowRight' &&
-              event.key !== 'Enter' &&
-              event.key !== 'Tab' &&
-              event.key !== 'Escape'
-            ) {
+            // The following keys allow the user to break out of cell edit mode, all other key events must be trapped
+            if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Tab', 'Escape'].some(key => key === event.key)) {
               event.stopPropagation();
             }
           }}
           ref={input => {
-            // TODO: might be better to replace this with componentDidMount
+            // This changes the way existing text in the cell is handled as we enter edit mode
             if (input && !props.isEditValueDirty) {
               input.focus();
               if (props.editMode === 'quick') {
-                // Select all the text
+                // Select all the text in the input field so that's it's immediately overwritten by the new text
                 input.select();
               } else {
-                // Put the caret at the end of the text
+                // Put the caret at the end of the text so it can be appended to
                 input.setSelectionRange(input.value.length, input.value.length);
               }
             }
           }}
         />
       </td>
-      :
+    );
+  } else {
+    cellElement = (
       <td
         className={cssClass}
         onMouseDown={event => {
-          // Preventing the event from bubbling keeps the input edit in focus when the user is
-          // adding cell refs to a formula
+          // preventDefault keeps the currently editable cell in focus as the user adds cell refs to a formula
           event.preventDefault();
           if (event.shiftKey) {
             props.cellShiftMouseDown(props.cellCoor);
@@ -90,18 +80,13 @@ const SheetCell = props => {
             props.cellMouseDown(props.cellCoor);
           }
         }}
-        onMouseUp={() => {
-          props.cellMouseUp(props.cellCoor);
-        }}
-        onMouseOver={() => {
-          props.cellMouseOver(props.cellCoor);
-        }}
-        onDoubleClick={() => {
-          props.cellDoubleClick(props.cellCoor);
-        }}
+        onMouseUp={() => props.cellMouseUp(props.cellCoor)}
+        onMouseOver={() => props.cellMouseOver(props.cellCoor)}
+        onDoubleClick={() => props.cellDoubleClick(props.cellCoor)}
       >
         <span>{props.cellData.get('val')}</span>
         {
+          /* Add an autofill icon if it's the primary cell and no range is selected */
           props.isPrimaryCell && rangeSize(props.selectedRange.toJS()) === 1 ?
             <div
               className={styles.autofillHandle}
@@ -118,7 +103,10 @@ const SheetCell = props => {
             null
         }
       </td>
-  );
+    );
+  }
+
+  return cellElement;
 };
 
 export default SheetCell;
