@@ -11,6 +11,7 @@ import {
   startedEditingCell,
   committedEditValue,
   deletedRange,
+  discardedEditValue,
 } from './sheetReducer';
 
 export const cellMouseDown = coor => (dispatch, getState) => {
@@ -94,7 +95,7 @@ export const tableKeyShiftTab = () => dispatch => {
 export const tableKeyEsc = () => (dispatch, getState) => {
   const sheet = getState().present.getIn(['sheet']);
   if (sheet.get('editMode') !== 'none') {
-    dispatch(ActionCreators.undo());
+    dispatch(discardedEditValue());
   }
 };
 

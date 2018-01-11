@@ -7,9 +7,8 @@ A very small spreadsheet. Built with React, Redux, and Immutable.
 Features:
 
 - Formula support, inc. cell references
-- Basic formula calculations, inc. SUM and AVERAGE
+- Basic formula calculations (SUM and AVERAGE)
 - Autofill
-- Undo/redo
 - Full keyboard support
 
 ## Install
